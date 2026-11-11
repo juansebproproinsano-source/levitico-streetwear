@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LEVÍTICO Streetwear — Viste tu Fe</title>
+<meta name="description" content="LEVÍTICO Streetwear: moda urbana conceptual y drops de edición limitada. Camisetas, hoodies, chaquetas y gorras. Viste tu Fe.">
+<meta name="theme-color" content="#080808">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23080808'/%3E%3Ctext x='32' y='46' font-family='Arial Black,Arial' font-size='38' font-weight='900' text-anchor='middle' fill='%23FFDE00'%3EL%3C/text%3E%3C/svg%3E">
+<link rel="preload" href="assets/fonts/bebas-neue-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/permanent-marker-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#tienda">Saltar al catálogo</a>
+
+<!-- ============================ BARRA DE ANUNCIO ============================ -->
+<div class="anuncio">
+  <div class="anuncio__track">
+    <span>HECHO EN ARMENIA</span><span class="anuncio__dot">◆</span>
+    <span>DROP 07 — EDICIÓN LIMITADA</span><span class="anuncio__dot">◆</span>
+    <span>VISTE TU FE</span><span class="anuncio__dot">◆</span>
+    <span>HECHO EN ARMENIA</span><span class="anuncio__dot">◆</span>
+    <span>DROP 07 — EDICIÓN LIMITADA</span><span class="anuncio__dot">◆</span>
+    <span>VISTE TU FE</span><span class="anuncio__dot">◆</span>
+  </div>
+</div>
+
+<!-- ================================= HEADER ================================= -->
+<header class="header" id="siteHeader">
+  <div class="header__inner">
+    <a class="marca" href="#inicio" aria-label="LEVÍTICO Streetwear, ir al inicio">
+      <span class="marca__logo">LEVÍTICO</span>
+      <span class="marca__sub">Streetwear</span>
+    </a>
+
+    <nav class="nav" aria-label="Navegación principal">
+      <a class="nav__link" href="#inicio">Inicio</a>
+      <div class="nav__item nav__item--mega">
+        <button class="nav__link nav__link--btn" id="megaTrigger" aria-expanded="false" aria-controls="megaMenu" aria-haspopup="true">
+          Tienda
+          <svg class="nav__caret" width="10" height="6" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <a class="nav__link" href="#nosotros">Nosotros</a>
+      <a class="nav__link" href="#coleccion">Colección</a>
+      <a class="nav__link" href="#drops">Drops</a>
+    </nav>
+
+    <div class="acciones">
+      <button class="accion" id="btnBuscar" aria-label="Buscar productos" aria-expanded="false">
+        <svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16.5 16.5L21 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+      <button class="accion" id="btnFavoritos" aria-label="Ver favoritos" aria-pressed="false">
+        <svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-9.4A4.1 4.1 0 0 1 12 7.6a4.1 4.1 0 0 1 7.5 3C19.5 15.4 12 20 12 20z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="accion accion--carrito" id="btnCarrito" aria-label="Abrir carrito de compras">
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 8V6.4a3 3 0 0 1 6 0V8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span class="accion__badge" id="cartCount" aria-live="polite">0</span>
+      </button>
+      <button class="hamburguesa" id="btnMenu" aria-label="Abrir menú" aria-expanded="false" aria-controls="menuMovil">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mega menú (escritorio) -->
+  <div class="mega" id="megaMenu">
+    <div class="mega__inner">
+      <div class="mega__col">
+        <p class="mega__titulo">Nuevo</p>
+        <button class="mega__link" data-categoria="nuevo">Recién llegado</button>
+        <button class="mega__link" data-categoria="nuevo">Último drop</button>
+        <button class="mega__link" data-categoria="nuevo">Edición limitada</button>
+      </div>
+      <div class="mega__col">
+        <p class="mega__titulo">Hombre</p>
+        <button class="mega__link" data-categoria="hombre" data-tipo="camiseta">Camisetas</button>
+        <button class="mega__link" data-categoria="hombre" data-tipo="sudadera">Sudaderas</button>
+        <button class="mega__link" data-categoria="hombre" data-tipo="pantalon">Pantalones</button>
+        <button class="mega__link" data-categoria="hombre" data-tipo="chaqueta">Chaquetas</button>
+      </div>
+      <div class="mega__col">
+        <p class="mega__titulo">Mujer</p>
+        <button class="mega__link" data-categoria="mujer" data-tipo="camiseta">Camisetas y tops</button>
+        <button class="mega__link" data-categoria="mujer" data-tipo="sudadera">Sudaderas</button>
+        <button class="mega__link" data-categoria="mujer" data-tipo="chaqueta">Chaquetas</button>
+        <button class="mega__link" data-categoria="mujer" data-tipo="pantalon">Pantalones</button>
+      </div>
+      <div class="mega__col">
+        <p class="mega__titulo">Gorras</p>
+        <button class="mega__link" data-categoria="gorras">Todas las gorras</button>
+        <button class="mega__link" data-categoria="gorras">Logo bordado</button>
+        <button class="mega__link" data-categoria="gorras">Snapback</button>
+      </div>
+      <div class="mega__col">
+        <p class="mega__titulo">Accesorios</p>
+        <button class="mega__link" data-categoria="accesorios">Todos los accesorios</button>
+        <button class="mega__link" data-categoria="accesorios">Calcetines</button>
+        <button class="mega__link" data-categoria="accesorios">Bolsos</button>
+      </div>
+      <div class="mega__promo">
+        <span class="mega__promo-tag">DROP 07</span>
+        <p class="mega__promo-titulo">Fe en<br>cada hilo.</p>
+        <button class="mega__promo-cta" data-categoria="nuevo">Ver el drop ↗</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Menú móvil -->
+<div class="menu-movil" id="menuMovil" aria-hidden="true">
+  <div class="menu-movil__top">
+    <span class="marca__logo marca__logo--sm">LEVÍTICO</span>
+    <button class="menu-movil__cerrar" id="btnCerrarMenu" aria-label="Cerrar menú">
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <nav class="menu-movil__nav" aria-label="Menú móvil">
+    <a class="menu-movil__link" href="#inicio">Inicio</a>
+
+    <div class="acordeon" data-acordeon>
+      <button class="acordeon__btn" aria-expanded="false" aria-controls="accTienda">
+        Tienda
+        <svg class="acordeon__icono" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="acordeon__panel" id="accTienda">
+        <button class="acordeon__link" data-categoria="nuevo">Nuevo</button>
+        <button class="acordeon__link" data-categoria="hombre">Hombre</button>
+        <button class="acordeon__link" data-categoria="mujer">Mujer</button>
+        <button class="acordeon__link" data-categoria="gorras">Gorras</button>
+        <button class="acordeon__link" data-categoria="accesorios">Accesorios</button>
+      </div>
+    </div>
+
+    <a class="menu-movil__link" href="#nosotros">Nosotros</a>
+    <a class="menu-movil__link" href="#coleccion">Colección</a>
+    <a class="menu-movil__link" href="#drops">Drops</a>
+  </nav>
+  <p class="menu-movil__pie">Viste tu Fe · Armenia, CO</p>
+</div>
+<div class="menu-movil__fondo" id="menuFondo"></div>
+
+<!-- Panel de búsqueda -->
+<div class="buscador" id="buscador">
+  <div class="buscador__inner">
+    <label class="buscador__label" for="inputBuscar">¿Qué estás buscando?</label>
+    <div class="buscador__caja">
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16.5 16.5L21 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <input id="inputBuscar" type="search" placeholder="Camiseta, hoodie, gorra…" autocomplete="off">
+      <button class="buscador__cerrar" id="btnCerrarBuscador" aria-label="Cerrar búsqueda">
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <p class="buscador__pista" id="pistaBusqueda">Escribe para filtrar el catálogo en tiempo real.</p>
+  </div>
+</div>
+
+<main id="inicio">
+
+  <!-- ================================== HERO ================================= -->
+  <section class="hero">
+    <img class="hero__foto" src="assets/hero.jpg" alt="Modelo con camiseta oversize negra de LEVÍTICO en una pared de concreto" width="1600" height="1100">
+    <div class="hero__velo"></div>
+
+    <svg class="splatter splatter--1" viewBox="0 0 400 400" aria-hidden="true">
+      <path fill="#FFDE00" d="M283.4 200C284.9 208.7 280.3 219.4 276.5 227.9C272.7 236.3 267 244.4 260.7 250.9C254.3 257.4 246.5 262.6 238.6 266.9C230.8 271.1 221.8 277.1 213.5 276.4C205.2 275.8 197.4 265 188.9 263C180.4 261.1 173.6 264.5 162.7 264.7C151.7 264.9 130.8 270.2 123.3 264.4C115.8 258.6 116.1 240.7 117.7 230C119.2 219.2 129.8 209 132.5 200C135.1 191 131.8 183.8 133.4 175.8C135 167.7 137.3 158.3 142.1 151.4C146.9 144.6 155.1 140.7 162.2 134.6C169.4 128.5 175.9 119.4 185 114.8C194 110.2 207.4 104 216.4 106.9C225.4 109.9 233.8 123.6 239 132.5C244.1 141.4 242.5 153.2 247.2 160.4C252 167.5 261.6 168.8 267.6 175.4C273.7 182 281.9 191.3 283.4 200ZM148.4 250.4Q135.1 254.3 125.3 254.1Q128.9 245.8 136.5 234.4ZM210.5 271.4Q206.6 305.9 201.6 326.9Q192.1 305.8 188.6 271.3ZM135.8 167.1Q112.1 146.9 98.1 133.8Q118.6 137.3 146 152.1ZM130.6 219.8Q102.4 218.7 84.4 211Q100.7 204.2 127.9 196.6ZM261.1 238.3Q271.5 250.7 277.6 258.5Q266.5 257.1 252 250ZM179.6 130.8Q177.4 94.8 179.4 72.4Q190.5 92.9 199 127.8Z"/>
+      <g fill="#FFDE00"><circle cx="173.9" cy="88.5" r="6.5"/><circle cx="322.5" cy="256" r="4.6"/><circle cx="211.9" cy="311.9" r="4.6"/><circle cx="144.1" cy="95.7" r="4.1"/><circle cx="267.2" cy="79.4" r="3.3"/><circle cx="287.6" cy="98.9" r="7"/><circle cx="88.7" cy="261.2" r="5.5"/><circle cx="327.3" cy="215.1" r="1.8"/><circle cx="137.8" cy="296.9" r="2.1"/><circle cx="282.1" cy="264.5" r="4.2"/><circle cx="67.9" cy="161.8" r="6"/><circle cx="330.3" cy="254.4" r="8.1"/><circle cx="206.6" cy="309.2" r="2.2"/></g>
+    </svg>
+    <svg class="splatter splatter--2" viewBox="0 0 400 400" aria-hidden="true">
+      <path fill="#F4F4F5" opacity=".9" d="M271.7 200C273.4 207.6 268.2 217.6 264.2 224.9C260.2 232.1 253.6 237.9 247.8 243.6C242 249.2 236.3 256.7 229.2 258.7C222.1 260.6 212.3 256.9 205.1 255.2C197.9 253.5 194.3 248.1 186.2 248.5C178.1 248.8 165 258.9 156.6 257.5C148.3 256 139.7 247.1 136.1 239.6C132.6 232 133.6 220.3 135.4 212.1C137.1 203.8 144.4 197.3 146.7 190C149 182.8 146.9 175.7 149.1 168.5C151.3 161.3 154.4 151.9 160 147C165.5 142.1 174.9 142.2 182.7 139.2C190.5 136.2 198.8 128.8 206.6 129C214.4 129.3 224.6 134.4 229.5 140.7C234.5 147 232.2 160.5 236.3 166.9C240.4 173.3 248.2 173.5 254.1 179C260 184.5 270 192.4 271.7 200ZM152.9 235.9Q138.1 238.4 127.3 236Q132.9 228.2 143.5 217.6ZM143.1 183.6Q127.3 173.7 118.7 165.3Q130.6 166 148.7 170.5ZM253.2 226Q262.4 237.6 266.6 246.5Q256.4 246.2 242.3 241.4ZM244.8 161.3Q267 151 283.3 149.1Q272.9 160.3 254.1 176ZM232.4 249.6Q230.8 260 228.3 266.8Q220.2 264.4 211.7 258Z"/>
+      <g fill="#F4F4F5" opacity=".9"><circle cx="255.8" cy="289.8" r="5.3"/><circle cx="108.6" cy="135.5" r="3.7"/><circle cx="257.3" cy="308.5" r="4.7"/><circle cx="288.5" cy="228.9" r="5.2"/><circle cx="108.4" cy="259.4" r="4.3"/><circle cx="123" cy="106.5" r="6.4"/><circle cx="142.5" cy="272.6" r="1.7"/><circle cx="101.5" cy="225.5" r="3.8"/><circle cx="275.6" cy="267.5" r="4.8"/><circle cx="156.8" cy="290.3" r="2.3"/></g>
+    </svg>
+
+    <div class="hero__contenido">
+      <span class="insignia">Nuevo drop</span>
+      <h1 class="hero__titulo">
+        <span class="hero__linea">Viste tu</span>
+        <span class="hero__linea hero__linea--marca">Fe</span>
+      </h1>
+      <p class="hero__texto">Streetwear conceptual de edición limitada. Gráficos pintados a mano, cortes oversize y una sola regla: no pasar desapercibido.</p>
+      <div class="hero__acciones">
+        <a class="cta-pill" href="#tienda" id="heroCta">
+          <span>Comprar ahora</span>
+          <span class="cta-pill__circulo" aria-hidden="true">↗</span>
+        </a>
+        <button class="hero__secundario" data-categoria="nuevo">Ver el drop 07</button>
+      </div>
+      <dl class="hero__datos">
+        <div><dt>Piezas</dt><dd>07</dd></div>
+        <div><dt>Edición</dt><dd>Limitada</dd></div>
+        <div><dt>Origen</dt><dd>Armenia</dd></div>
+      </dl>
+    </div>
+
+    <p class="hero__vertical" aria-hidden="true">DROP 07 — COLECCIÓN FE VIVA</p>
+  </section>
+
+  <!-- ================================ MARQUEE ================================ -->
+  <div class="marquesina" aria-hidden="true">
+    <div class="marquesina__track">
+      <span>Viste tu Fe</span><span class="marquesina__estrella">✳</span>
+      <span>Edición limitada</span><span class="marquesina__estrella">✳</span>
+      <span>Hecho para la calle</span><span class="marquesina__estrella">✳</span>
+      <span>Viste tu Fe</span><span class="marquesina__estrella">✳</span>
+      <span>Edición limitada</span><span class="marquesina__estrella">✳</span>
+      <span>Hecho para la calle</span><span class="marquesina__estrella">✳</span>
+    </div>
+  </div>
+
+  <!-- ================================ TIENDA ================================= -->
+  <section class="seccion" id="tienda">
+    <div class="seccion__cabecera">
+      <div>
+        <p class="eyebrow">Catálogo</p>
+        <h2 class="seccion__titulo">La tienda</h2>
+      </div>
+      <p class="seccion__nota" id="estadoCatalogo" aria-live="polite"></p>
+    </div>
+
+    <div class="filtros" id="filtros" role="group" aria-label="Filtrar por categoría">
+      <button class="filtro is-activo" data-categoria="todos" aria-pressed="true">Todos</button>
+      <button class="filtro" data-categoria="nuevo" aria-pressed="false">Nuevo</button>
+      <button class="filtro" data-categoria="hombre" aria-pressed="false">Hombre</button>
+      <button class="filtro" data-categoria="mujer" aria-pressed="false">Mujer</button>
+      <button class="filtro" data-categoria="gorras" aria-pressed="false">Gorras</button>
+      <button class="filtro" data-categoria="accesorios" aria-pressed="false">Accesorios</button>
+    </div>
+    <p class="aviso-filtro" id="avisoFiltro" hidden></p>
+
+    <div class="grid" id="gridProductos" aria-live="polite"></div>
+
+    <div class="vacio" id="vacio" hidden>
+      <p class="vacio__icono" id="vacioIcono">✳</p>
+      <h3 class="vacio__titulo" id="vacioTitulo">Nada por aquí</h3>
+      <p class="vacio__texto" id="vacioTexto">No encontramos prendas con ese filtro. Prueba con otra categoría.</p>
+      <button class="boton boton--fantasma" id="btnLimpiarFiltros">Ver todo el catálogo</button>
+    </div>
+  </section>
+
+  <!-- ================================ COLECCIÓN ============================== -->
+  <section class="seccion seccion--coleccion" id="coleccion">
+    <div class="coleccion">
+      <div class="coleccion__texto">
+        <p class="eyebrow">Colección 07</p>
+        <h2 class="seccion__titulo">Fe viva</h2>
+        <p class="coleccion__parrafo">Nueve piezas construidas sobre algodón pesado y nylon técnico. Cada gráfico se dibuja a mano, se digitaliza y se estampa en tiradas cortas: cuando se agota, no vuelve.</p>
+        <ul class="coleccion__lista">
+          <li><span>01</span> Gráficos originales de estudio</li>
+          <li><span>02</span> Tiradas de 120 unidades</li>
+          <li><span>03</span> Confección local en Armenia</li>
+        </ul>
+        <a class="boton boton--amarillo" href="#tienda">Explorar la colección <span aria-hidden="true">↗</span></a>
+      </div>
+      <div class="coleccion__media">
+        <img src="assets/about.jpg" alt="Detalle de una chaqueta bomber negra con bordado amarillo" loading="lazy" width="900" height="1100">
+        <span class="coleccion__sello">Viste tu Fe</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================= NOSOTROS ============================== -->
+  <section class="seccion" id="nosotros">
+    <div class="nosotros">
+      <div class="nosotros__media">
+        <img src="assets/hoodie.jpg" alt="Hoodie oversize negro de LEVÍTICO visto de espaldas" loading="lazy" width="900" height="1100">
+        <span class="nosotros__etiqueta">Est. 2024</span>
+      </div>
+      <div class="nosotros__texto">
+        <p class="eyebrow">Nosotros</p>
+        <h2 class="seccion__titulo">La calle también<br>es un púlpito</h2>
+        <p>LEVÍTICO nace en Armenia con una idea simple: vestir la fe sin sermones. Tomamos referencias del arte urbano, del graffiti y de la sastrería técnica para construir prendas que aguanten la intemperie y el ruido de la ciudad.</p>
+        <p class="nosotros__secundario">Trabajamos con talleres locales, tintas al agua y tiradas cortas. Sin sobreproducción, sin descuentos eternos: lo que ves es lo que hay.</p>
+        <div class="nosotros__metricas">
+          <div><strong>120</strong><span>unidades por drop</span></div>
+          <div><strong>100%</strong><span>algodón pesado</span></div>
+          <div><strong>03</strong><span>talleres aliados</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================== DROPS ================================ -->
+  <section class="seccion" id="drops">
+    <div class="seccion__cabecera">
+      <div>
+        <p class="eyebrow">Calendario</p>
+        <h2 class="seccion__titulo">Próximos drops</h2>
+      </div>
+      <p class="seccion__nota">Sin restock. Sin avisos privados.</p>
+    </div>
+
+    <div class="drops">
+      <article class="drop">
+        <p class="drop__fecha">12 · DIC</p>
+        <h3 class="drop__titulo">Salmo 91</h3>
+        <p class="drop__texto">Camiseta y hoodie en negro tinta con gráfico a gran formato.</p>
+        <span class="drop__estado drop__estado--proximo">Próximamente</span>
+      </article>
+      <article class="drop drop--destacado">
+        <p class="drop__fecha">19 · DIC</p>
+        <h3 class="drop__titulo">Ceniza</h3>
+        <p class="drop__texto">Cápsula de invierno: chaqueta acolchada y cargo técnico.</p>
+        <span class="drop__estado drop__estado--vivo">En vivo</span>
+      </article>
+      <article class="drop">
+        <p class="drop__fecha">09 · ENE</p>
+        <h3 class="drop__titulo">Nueva Tierra</h3>
+        <p class="drop__texto">Primera cápsula de accesorios: gorras, bolsos y calcetines.</p>
+        <span class="drop__estado drop__estado--proximo">Próximamente</span>
+      </article>
+    </div>
+  </section>
+
+  <!-- =============================== NEWSLETTER ============================== -->
+  <section class="newsletter">
+    <div class="newsletter__inner">
+      <p class="eyebrow">Lista de espera</p>
+      <h2 class="newsletter__titulo">Entérate antes que nadie</h2>
+      <p class="newsletter__texto">Avisos de drop, acceso anticipado y nada de spam. Puedes salir cuando quieras.</p>
+      <form class="newsletter__form" id="newsletterForm" novalidate>
+        <label class="sr-only" for="newsletterEmail">Correo electrónico</label>
+        <input id="newsletterEmail" type="email" name="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" required>
+        <button type="submit" class="boton boton--amarillo">Unirme</button>
+      </form>
+      <p class="newsletter__msg" id="newsletterMsg" role="status"></p>
+    </div>
+  </section>
+</main>
+
+<!-- ================================= FOOTER ================================= -->
+<footer class="footer">
+  <div class="footer__inner">
+    <div class="footer__marca">
+      <span class="marca__logo">LEVÍTICO</span>
+      <span class="marca__sub">Streetwear</span>
+      <p class="footer__claim">Viste tu Fe. Moda urbana conceptual de edición limitada, diseñada en Armenia.</p>
+    </div>
+    <nav class="footer__col" aria-label="Tienda">
+      <p class="footer__titulo">Tienda</p>
+      <button class="footer__link" data-categoria="nuevo">Nuevo</button>
+      <button class="footer__link" data-categoria="hombre">Hombre</button>
+      <button class="footer__link" data-categoria="mujer">Mujer</button>
+      <button class="footer__link" data-categoria="gorras">Gorras</button>
+      <button class="footer__link" data-categoria="accesorios">Accesorios</button>
+    </nav>
+    <nav class="footer__col" aria-label="Información">
+      <p class="footer__titulo">Ayuda</p>
+      <a class="footer__link" href="#nosotros">Sobre nosotros</a>
+      <a class="footer__link" href="#drops">Calendario de drops</a>
+      <button class="footer__link" type="button" data-aviso="Cada ficha de producto muestra qué tallas están disponibles y cuáles agotadas.">Guía de tallas</button>
+      <button class="footer__link" type="button" data-aviso="Despachamos en 1 a 3 días hábiles tras confirmar el pago (hasta 5 en drops). Cambios dentro de 10 días calendario y garantía de 30 días por defectos de fábrica. El envío se cotiza por WhatsApp antes de pagar.">Envíos y devoluciones</button>
+      <a class="footer__link" href="terminos.html">Términos y condiciones</a>
+    </nav>
+    <div class="footer__col" id="footerContacto">
+      <p class="footer__titulo">Contacto</p>
+      <a class="footer__link" id="footerWhatsapp" href="#" target="_blank" rel="noopener" hidden>WhatsApp</a>
+      <a class="footer__link" id="footerEmail" href="#" hidden>Correo</a>
+      <p class="footer__redes" id="footerRedes" hidden>
+        <a id="footerInstagram" href="#" target="_blank" rel="noopener" aria-label="Instagram">IG</a>
+      </p>
+      <p class="footer__horario" id="footerHorario" hidden></p>
+    </div>
+  </div>
+  <div class="footer__base">
+    <p>© <span id="anioActual">2026</span> LEVÍTICO Streetwear S.A.S. Todos los derechos reservados.</p>
+    <p class="footer__base-nota">Hecho en Armenia, CO · Precios en COP · <a class="footer__link-legal" href="terminos.html">Términos y condiciones</a> · <a class="footer__admin" href="admin.html" rel="nofollow">Administración</a></p>
+  </div>
+</footer>
+
+<!-- ============================== MODAL PRODUCTO ============================ -->
+<div class="modal" id="modalProducto" aria-hidden="true">
+  <div class="modal__fondo" data-cerrar-modal></div>
+  <div class="modal__caja" role="dialog" aria-modal="true" aria-labelledby="modalNombre">
+    <button class="modal__cerrar" id="modalCerrar" aria-label="Cerrar ficha de producto">
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+    <div class="modal__media">
+      <img id="modalImagen" src="assets/tee.jpg" alt="" width="900" height="1200">
+      <video id="modalVideo" class="modal__video" controls playsinline hidden></video>
+      <div class="modal__badges" id="modalBadges"></div>
+    </div>
+    <div class="modal__info">
+      <p class="modal__cat" id="modalCategoria">Camiseta</p>
+      <h3 class="modal__nombre" id="modalNombre">Producto</h3>
+      <p class="modal__precios">
+        <span class="modal__precio" id="modalPrecio">$ 0</span>
+        <span class="modal__antes" id="modalPrecioAntes" hidden></span>
+      </p>
+      <p class="modal__desc" id="modalDescripcion"></p>
+      <p class="modal__meta" id="modalMeta"></p>
+
+      <div class="modal__tallas">
+        <div class="modal__tallas-top">
+          <p class="modal__label">Talla</p>
+          <button class="modal__guia" type="button" id="btnGuiaTallas">Guía de tallas</button>
+        </div>
+        <div class="tallas" id="modalTallas" role="group" aria-label="Selecciona una talla"></div>
+        <p class="modal__error" id="modalError" role="alert" hidden></p>
+      </div>
+
+      <button class="boton boton--amarillo boton--bloque" id="modalAgregar">Añadir al carrito</button>
+      <p class="modal__aviso">
+        <span>Pago contra entrega en Armenia y zonas aledañas, transferencia bancaria o pasarela autorizada.</span>
+        <span>El envío no está incluido en el precio: se calcula antes de pagar.</span>
+      </p>
+      <p class="modal__nota">Confirmamos disponibilidad, envío y forma de pago por WhatsApp al cerrar el pedido. Al comprar aceptas los <a class="modal__legal" href="terminos.html">términos y condiciones</a>.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== CARRITO (PANEL) ========================== -->
+<div class="carrito" id="panelCarrito">
+  <div class="carrito__fondo" data-cerrar-carrito></div>
+  <aside class="carrito__panel" role="dialog" aria-modal="true" aria-labelledby="carritoTitulo">
+    <header class="carrito__cabecera">
+      <h2 class="carrito__titulo" id="carritoTitulo">Tu carrito</h2>
+      <button class="carrito__cerrar" id="btnCerrarCarrito" aria-label="Cerrar carrito">
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </header>
+    <div class="carrito__cuerpo" id="carritoItems"></div>
+    <div class="carrito__vacio" id="carritoVacio">
+      <p class="carrito__vacio-icono">✳</p>
+      <p>Tu carrito está vacío.</p>
+      <button class="boton boton--fantasma" data-cerrar-carrito>Seguir comprando</button>
+    </div>
+    <footer class="carrito__pie" id="carritoPie">
+      <div class="carrito__subtotal">
+        <span>Subtotal</span>
+        <strong id="carritoTotal">$ 0</strong>
+      </div>
+      <p class="carrito__aviso">Precios en COP con impuestos incluidos. El envío no está incluido: se calcula antes de pagar.</p>
+      <button class="boton boton--amarillo boton--bloque" id="btnWhatsapp">Finalizar por WhatsApp</button>
+      <button class="carrito__vaciar" id="btnVaciar">Vaciar carrito</button>
+      <p class="carrito__nota">Al finalizar se abre WhatsApp con tu pedido. Ahí confirmamos envío y forma de pago. Al comprar aceptas los <a class="carrito__legal" href="terminos.html">términos y condiciones</a>.</p>
+    </footer>
+  </aside>
+</div>
+
+<!-- ================================== TOAST ================================ -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="config.js" defer></script>
+<script src="store.js" defer></script>
+<script src="script.js" defer></script>
+</body>
+</html>

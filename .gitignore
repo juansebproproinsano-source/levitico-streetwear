@@ -1,0 +1,13 @@
+# Sistema operativo
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Entornos y dependencias
+node_modules/
+.env
+.env.*
+
+# Despliegue
+.vercel
+.netlify

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administración — LEVÍTICO Streetwear</title>
+<meta name="description" content="Panel de administración de LEVÍTICO Streetwear.">
+<meta name="theme-color" content="#080808">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23080808'/%3E%3Ctext x='32' y='46' font-family='Arial Black,Arial' font-size='38' font-weight='900' text-anchor='middle' fill='%23FFDE00'%3EL%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin-body">
+
+<!-- ================================= LOGIN ================================= -->
+<main class="login" id="loginWrap">
+  <div class="login__caja">
+    <a class="login__marca" href="index.html">
+      <span class="marca__logo">LEVÍTICO</span>
+      <span class="marca__sub">Streetwear</span>
+    </a>
+
+    <p class="eyebrow">Administración</p>
+    <h1 class="login__titulo">Acceso al panel</h1>
+    <p class="login__texto">Gestiona el catálogo, sube fotos y define qué tallas están disponibles.</p>
+
+    <form class="login__form" id="loginForm" novalidate>
+      <label class="campo">
+        <span class="campo__label">Correo del administrador</span>
+        <input id="loginEmail" type="email" name="email" autocomplete="username" placeholder="tu@correo.com" required>
+      </label>
+      <label class="campo">
+        <span class="campo__label">Contraseña</span>
+        <input id="loginClave" type="password" name="clave" autocomplete="current-password" placeholder="••••••••" required>
+      </label>
+      <p class="login__error" id="loginError" role="alert" hidden></p>
+      <button class="boton boton--amarillo boton--bloque" type="submit" id="loginBtn">Entrar al panel</button>
+    </form>
+
+    <p class="login__nota">
+      Solo entra el usuario administrador que creaste en Supabase. No hay registro público.
+    </p>
+    <a class="login__volver" href="index.html">← Volver a la tienda</a>
+  </div>
+</main>
+
+<!-- ============================== CONFIGURACIÓN ============================= -->
+<main class="setup" id="setupWrap" hidden>
+  <div class="setup__caja">
+    <a class="login__marca" href="index.html">
+      <span class="marca__logo">LEVÍTICO</span>
+      <span class="marca__sub">Streetwear</span>
+    </a>
+
+    <p class="eyebrow">Configuración pendiente</p>
+    <h1 class="setup__titulo">Conecta la tienda a tu base de datos</h1>
+    <p class="setup__texto">
+      El panel todavía no puede guardar nada porque falta conectar Supabase.
+      Toma unos minutos y solo se hace una vez.
+    </p>
+
+    <p class="setup__motivo" id="setupMotivo"></p>
+
+    <ol class="setup__pasos">
+      <li>
+        <strong>Crea un proyecto en Supabase</strong>
+        <span>Entra a supabase.com, crea una cuenta gratuita y un proyecto nuevo.</span>
+      </li>
+      <li>
+        <strong>Ejecuta el esquema</strong>
+        <span>Abre <code>supabase/schema.sql</code>, cópialo completo y pégalo en el SQL Editor del proyecto. Pulsa Run.</span>
+      </li>
+      <li>
+        <strong>Crea tu usuario administrador</strong>
+        <span>En Authentication → Users, añade un usuario con tu correo y una contraseña. Ese es el acceso al panel.</span>
+      </li>
+      <li>
+        <strong>Completa <code>config.js</code></strong>
+        <span>Copia la Project URL y la clave <code>anon public</code> desde Project Settings → API y pégalas en <code>config.js</code>. Añade también tu WhatsApp, correo e Instagram.</span>
+      </li>
+      <li>
+        <strong>Recarga esta página</strong>
+        <span>Con eso el panel queda operativo y podrás cargar tu primer producto.</span>
+      </li>
+    </ol>
+
+    <p class="setup__texto setup__texto--chico">
+      La guía completa está en <code>SETUP.md</code>, en la carpeta del proyecto.
+    </p>
+
+    <a class="login__volver" href="index.html">← Volver a la tienda</a>
+  </div>
+</main>
+
+<!-- ================================= PANEL ================================= -->
+<div class="admin" id="appWrap" hidden>
+  <header class="admin-top">
+    <div class="admin-top__marca">
+      <a class="marca" href="index.html" aria-label="LEVÍTICO, ir a la tienda">
+        <span class="marca__logo marca__logo--sm">LEVÍTICO</span>
+        <span class="marca__sub">Streetwear</span>
+      </a>
+      <span class="admin-top__etiqueta">Panel</span>
+    </div>
+    <div class="admin-top__acciones">
+      <span class="admin-top__cuenta" id="adminCuenta"></span>
+      <a class="boton boton--fantasma boton--sm" href="index.html">Ver tienda</a>
+      <button class="boton boton--fantasma boton--sm" id="btnSalir">Salir</button>
+    </div>
+  </header>
+
+  <div class="admin-resumen" id="resumen">
+    <div class="stat"><span class="stat__valor" id="statTotal">0</span><span class="stat__label">Productos</span></div>
+    <div class="stat"><span class="stat__valor" id="statPublicados">0</span><span class="stat__label">Publicados</span></div>
+    <div class="stat"><span class="stat__valor" id="statOcultos">0</span><span class="stat__label">Ocultos</span></div>
+    <div class="stat"><span class="stat__valor" id="statPedidos">0</span><span class="stat__label">Pedidos</span></div>
+  </div>
+
+  <main class="admin-main">
+
+    <!-- ------------------------------ Formulario ------------------------------ -->
+    <section class="panel" aria-labelledby="formTitulo">
+      <div class="panel__cabecera">
+        <h2 class="panel__titulo" id="formTitulo">Añadir producto</h2>
+        <button class="panel__link" id="btnCancelar" type="button" hidden>Cancelar edición</button>
+      </div>
+
+      <form class="form" id="formProducto" novalidate>
+        <input type="hidden" id="productoId" value="">
+
+        <div class="campo">
+          <label class="campo__label" for="nombre">Nombre del producto <span class="req">*</span></label>
+          <input id="nombre" type="text" maxlength="70" placeholder="Camiseta Oversize «Gracia»" required>
+          <p class="campo__error" id="errorNombre" hidden>Escribe un nombre de al menos 3 caracteres.</p>
+        </div>
+
+        <div class="form__fila">
+          <div class="campo">
+            <label class="campo__label" for="tipo">Tipo de prenda <span class="req">*</span></label>
+            <select id="tipo" required></select>
+          </div>
+          <div class="campo">
+            <label class="campo__label" for="publico">Público</label>
+            <select id="publico"></select>
+          </div>
+        </div>
+
+        <div class="form__fila">
+          <div class="campo">
+            <label class="campo__label" for="precio">Precio (COP) <span class="req">*</span></label>
+            <div class="campo__moneda">
+              <span>$</span>
+              <input id="precio" type="number" min="0" step="100" inputmode="numeric" placeholder="149900" required>
+            </div>
+            <p class="campo__pista" id="precioPreview">Se muestra como: $ 0</p>
+            <p class="campo__error" id="errorPrecio" hidden>Indica un precio mayor que 0.</p>
+          </div>
+          <div class="campo">
+            <label class="campo__label" for="precioAnterior">Precio anterior (opcional)</label>
+            <div class="campo__moneda">
+              <span>$</span>
+              <input id="precioAnterior" type="number" min="0" step="100" inputmode="numeric" placeholder="189900">
+            </div>
+            <p class="campo__pista">Déjalo en 0 si no está en oferta.</p>
+          </div>
+        </div>
+
+        <div class="form__fila">
+          <div class="campo">
+            <label class="campo__label" for="estado">Estado</label>
+            <select id="estado"></select>
+          </div>
+          <div class="campo">
+            <label class="campo__label" for="color">Color</label>
+            <input id="color" type="text" maxlength="30" placeholder="Negro">
+          </div>
+        </div>
+
+        <div class="campo">
+          <label class="campo__label" for="descripcion">Descripción</label>
+          <textarea id="descripcion" rows="3" maxlength="400" placeholder="Algodón pesado de 240 g/m², estampado serigrafiado…"></textarea>
+        </div>
+
+        <fieldset class="campo campo--checks">
+          <legend class="campo__label">Etiquetas</legend>
+          <label class="check"><input type="checkbox" id="nuevo"> <span>Nuevo</span></label>
+          <label class="check"><input type="checkbox" id="limitado"> <span>Edición limitada</span></label>
+          <label class="check"><input type="checkbox" id="activo" checked> <span>Publicado en la tienda</span></label>
+        </fieldset>
+
+        <fieldset class="campo campo--tallas">
+          <legend class="campo__label">Tallas disponibles</legend>
+          <p class="campo__pista">Toca una talla para marcarla como disponible o agotada.</p>
+          <div class="chips" id="tallas"></div>
+          <p class="campo__error" id="errorTallas" hidden>Marca al menos una talla disponible.</p>
+        </fieldset>
+
+        <fieldset class="campo campo--media">
+          <legend class="campo__label">Foto del producto <span class="req">*</span></legend>
+          <p class="campo__pista">JPG, PNG o WebP. Se comprime automáticamente antes de subirla.</p>
+
+          <div class="media" id="mediaImagen">
+            <div class="media__preview" id="previewImagen">
+              <span class="media__vacio">Sin foto</span>
+            </div>
+            <div class="media__controles">
+              <label class="boton boton--fantasma boton--sm" for="archivoImagen">Subir foto</label>
+              <input class="sr-only" id="archivoImagen" type="file" accept="image/*">
+              <button class="panel__link" type="button" id="btnQuitarImagen" hidden>Quitar foto</button>
+              <p class="campo__error" id="errorImagen" hidden>La foto es obligatoria.</p>
+            </div>
+          </div>
+
+          <p class="campo__label campo__label--sub">Video (opcional)</p>
+          <div class="media" id="mediaVideo">
+            <div class="media__preview media__preview--video" id="previewVideo">
+              <span class="media__vacio">Sin video</span>
+            </div>
+            <div class="media__controles">
+              <label class="boton boton--fantasma boton--sm" for="archivoVideo">Subir video</label>
+              <input class="sr-only" id="archivoVideo" type="file" accept="video/mp4,video/webm">
+              <button class="panel__link" type="button" id="btnQuitarVideo" hidden>Quitar video</button>
+              <p class="campo__pista">MP4 o WebM, máximo 50 MB.</p>
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="form__acciones">
+          <button class="boton boton--amarillo" type="submit" id="btnGuardar">Guardar producto</button>
+          <button class="boton boton--fantasma" type="button" id="btnLimpiar">Limpiar formulario</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- -------------------------------- Listado ------------------------------- -->
+    <section class="panel" aria-labelledby="listaTitulo">
+      <div class="panel__cabecera">
+        <h2 class="panel__titulo" id="listaTitulo">Catálogo</h2>
+        <button class="panel__link" id="btnRecargar" type="button">Actualizar</button>
+      </div>
+
+      <label class="campo campo--buscar">
+        <span class="sr-only">Buscar en el catálogo</span>
+        <input id="buscarLista" type="search" placeholder="Buscar por nombre o tipo…" autocomplete="off">
+      </label>
+
+      <div class="lista" id="listaProductos"></div>
+      <p class="lista__vacio" id="listaVacia" hidden>No hay productos que coincidan.</p>
+    </section>
+
+    <!-- -------------------------------- Pedidos ------------------------------- -->
+    <section class="panel panel--pedidos" aria-labelledby="pedidosTitulo">
+      <div class="panel__cabecera">
+        <h2 class="panel__titulo" id="pedidosTitulo">Pedidos recientes</h2>
+        <button class="panel__link" id="btnRecargarPedidos" type="button">Actualizar</button>
+      </div>
+      <p class="campo__pista">
+        Cada pedido que se envía por WhatsApp queda registrado aquí como respaldo.
+        La conversación y el pago se cierran en WhatsApp.
+      </p>
+      <div class="lista" id="listaPedidos"></div>
+      <p class="lista__vacio" id="pedidosVacio" hidden>Todavía no hay pedidos registrados.</p>
+    </section>
+  </main>
+
+  <footer class="admin-pie">
+    <p>LEVÍTICO Streetwear · Panel de administración</p>
+    <a href="index.html">Volver a la tienda</a>
+  </footer>
+</div>
+
+<div class="toast" id="adminToast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="config.js" defer></script>
+<script src="store.js" defer></script>
+<script src="admin.js" defer></script>
+</body>
+</html>
