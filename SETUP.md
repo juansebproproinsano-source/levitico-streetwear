@@ -91,6 +91,8 @@ Si algo falla, el panel lo dice con un mensaje concreto: configuración incomple
 
 La tienda es estática: no necesita compilación ni servidor propio. Cualquiera de estas opciones es gratuita y admite dominio propio.
 
+> **Ya está publicado.** Tienda: https://levitico-streetwear.vercel.app · Código: https://github.com/juansebproproinsano-source/levitico-streetwear. Los pasos siguientes quedan como referencia para volver a desplegar o cambiar de cuenta.
+
 ### GitHub + Vercel (recomendado)
 
 1. Crea un repositorio vacío en GitHub (por ejemplo `levitico-streetwear`), sin README ni licencia.
@@ -106,7 +108,9 @@ La tienda es estática: no necesita compilación ni servidor propio. Cualquiera 
 4. Configuración del proyecto: **Framework Preset: Other**, sin *Build Command*, *Output Directory* en la raíz (`.`), *Root Directory* sin tocar.
 5. Pulsa **Deploy**. En un minuto tendrás una URL `https://levitico-streetwear.vercel.app`.
 
-Cada `git push` a `main` vuelve a publicar solo. El archivo `vercel.json` añade cabeceras de seguridad y caché larga para las imágenes de `assets/`.
+Para que cada `git push` a `main` vuelva a publicar solo, conecta el repositorio desde el panel de Vercel: **Project → Settings → Git → Connect Git Repository**. La cuenta de Vercel debe tener acceso al repositorio de GitHub (autoriza la Vercel GitHub App sobre `levitico-streetwear`). Mientras no esté conectado, publica a mano con `vercel --prod`.
+
+El archivo `vercel.json` añade cabeceras de seguridad y caché larga para las imágenes de `assets/`.
 
 También puedes desplegar sin GitHub, desde la terminal:
 
