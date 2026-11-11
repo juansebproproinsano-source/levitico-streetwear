@@ -3,7 +3,7 @@
 Tienda de streetwear conceptual («Viste tu Fe») construida con HTML, CSS y JavaScript puros, sin paso de compilación. El catálogo, las fotos, los pedidos y la lista de correos viven en Supabase; los pedidos se cierran por WhatsApp.
 
 **Tienda publicada:** https://levitico-streetwear.vercel.app
-**Código:** https://github.com/juansebproproinsano-source/levitico-streetwear
+**Código:** https://github.com/juansebproinsano-source/levitico-streetwear
 **Términos:** https://levitico-streetwear.vercel.app/terminos.html
 
 > Antes de abrir al público falta ejecutar `supabase/schema.sql` en Supabase y crear el usuario administrador. La guía paso a paso está en [`SETUP.md`](SETUP.md).
@@ -42,14 +42,18 @@ store.js          Capa de datos compartida (Supabase, precios COP, carrito)
 admin.html        Panel de administración
 admin.css         Estilos del panel
 admin.js          Lógica del panel (sesión, CRUD, subida de archivos)
+anio.js           Escribe el año actual en el pie (fuera del HTML, por la CSP)
 fonts.css         Tipografías autoalojadas
 assets/           Fotografías y fuentes
 supabase/
-  schema.sql      Tablas, permisos y almacenamiento — se ejecuta una vez
+  schema.sql      Tablas, permisos, límites y almacenamiento — se ejecuta una vez
+robots.txt        Le pide a los buscadores que no indexen el panel
+vercel.json       Cabeceras de seguridad, CSP y caché para Vercel
+.vercelignore     Qué archivos internos no se publican
+SECURITY.md       Qué protección tiene la tienda y qué no aplica
 SETUP.md          Guía de instalación y publicación
 publicar.ps1      Publica en Vercel al guardar (vigilante)
 publicar.bat      Doble clic para abrir el vigilante
-vercel.json       Cabeceras de seguridad y caché para Vercel
 netlify.toml      Configuración de despliegue en Netlify
 ```
 
@@ -58,8 +62,8 @@ netlify.toml      Configuración de despliegue en Netlify
 Lo que ya funciona de verdad:
 
 - **Catálogo y fotos en Supabase.** Los productos se publican desde el panel y aparecen en la tienda en cualquier dispositivo.
-- **Acceso al panel con Supabase Auth.** Correo y contraseña; el usuario administrador lo creas tú en Supabase. No hay registro público.
-- **Pedidos por WhatsApp.** El cliente arma el carrito y el botón abre WhatsApp con el detalle del pedido listo para enviar. Cada pedido queda además registrado en la tabla `pedidos` como respaldo.
+- **Acceso al panel con Supabase Auth.** Correo y contraseña; el usuario administrador lo creas tú en Supabase. No hay registro público y, además, solo el correo de la tabla `administradores` tiene permisos sobre los datos.
+- **Pedidos por WhatsApp.** El cliente arma el carrito y el botón abre WhatsApp con el detalle del pedido listo para enviar. Cada pedido queda además registrado en la tabla `pedidos` como respaldo, con el **precio calculado por la base de datos**, no por el navegador.
 - **Lista de correos.** El formulario del newsletter guarda el correo en la tabla `suscriptores`.
 
 Lo que no incluye:
@@ -70,7 +74,7 @@ Lo que no incluye:
 
 ## Panel de administración
 
-Ruta: `admin.html`. Está enlazado discretamente en el pie de la tienda.
+Ruta: `admin.html`. No está enlazado en la tienda ni indexado por los buscadores: se entra escribiendo la dirección o desde un marcador.
 
 Funciones:
 
@@ -101,10 +105,18 @@ La página es independiente de `script.js`: solo carga `styles.css` y `fonts.css
 | Dato | Dónde | Quién puede leerlo |
 | --- | --- | --- |
 | Productos | Supabase, tabla `productos` | Todos (solo los publicados); el administrador ve todo |
-| Fotos y videos | Supabase Storage, bucket `productos` | Lectura pública; escritura solo con sesión |
+| Fotos y videos | Supabase Storage, bucket `productos` | Lectura pública; escritura solo con sesión de administrador |
 | Pedidos | Supabase, tabla `pedidos` | Solo el administrador puede leerlos |
 | Correos del newsletter | Supabase, tabla `suscriptores` | Solo el administrador |
+| Registro de actividad | Supabase, tabla `eventos` | Solo el administrador; nadie puede escribirlo desde el navegador |
+| Lista blanca de acceso | Supabase, tabla `administradores` | Nadie con la clave pública; la usan las reglas RLS |
 | Carrito y favoritos | `localStorage` del visitante | Solo ese navegador |
+
+## Seguridad
+
+La tienda es estática y no tiene servidor propio, así que la protección vive en tres sitios: las cabeceras de `vercel.json` (HSTS, CSP sin `unsafe-inline`, `X-Frame-Options`, permisos desactivados), las reglas RLS de `supabase/schema.sql` (lista blanca de administradores, precios calculados en la base, límite de solicitudes por IP, registro de eventos) y el código del panel (bloqueo tras cinco intentos fallidos, cierre por inactividad, mensajes de error que no revelan si un correo existe).
+
+El detalle completo, punto por punto y con lo que no aplica explicado, está en [`SECURITY.md`](SECURITY.md).
 
 ## Sistema de diseño
 

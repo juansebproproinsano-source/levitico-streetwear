@@ -1,0 +1,36 @@
+# ============================================================================
+# LEVÍTICO STREETWEAR — .vercelignore
+# Nada de esta lista se sube a Vercel. Evita que archivos internos queden
+# accesibles por URL (esquema de base de datos, notas, scripts, secretos).
+# ============================================================================
+
+# Esquema de base de datos y notas de configuración
+supabase/
+*.md
+
+# Secretos y variables de entorno (nunca deben publicarse)
+.env
+.env.*
+.env.local
+.env*.local
+
+# Scripts locales de publicación y sus registros
+publicar.ps1
+publicar.bat
+publicar.log
+
+# Configuración de otros proveedores y de paquetes
+netlify.toml
+package.json
+package-lock.json
+node_modules/
+
+# Metadatos de git y del editor
+.git/
+.gitignore
+.gitattributes
+.vscode/
+.idea/
+*.log
+Thumbs.db
+.DS_Store

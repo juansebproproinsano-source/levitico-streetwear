@@ -1062,7 +1062,9 @@ body::after {
 }
 .card--esqueleto .card__media { background: #1a1a1a; }
 .card--esqueleto .e-linea { height: 12px; margin-bottom: 8px; }
+.card--esqueleto .e-linea--larga { width: 80%; }
 .card--esqueleto .e-linea--corta { width: 55%; }
+.card--esqueleto .e-linea--corta-2 { width: 40%; margin-top: 10px; }
 
 /* Vacío */
 .vacio {

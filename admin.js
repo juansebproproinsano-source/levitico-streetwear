@@ -88,12 +88,115 @@
     $('adminCuenta').textContent = session && session.user ? session.user.email : '';
 
     inicializarPanel();
+    reiniciarInactividad();
   }
 
   /* --------------------------------- Sesión --------------------------------- */
 
+  /* -------------------- Bloqueo por intentos fallidos (17) ------------------ */
+
+  var LLAVE_INTENTOS = 'levitico.admin.intentos';
+  var MAX_INTENTOS = 5;
+
+  function leerIntentos() {
+    try {
+      var datos = JSON.parse(window.localStorage.getItem(LLAVE_INTENTOS) || '{}') || {};
+      return {
+        fallos: Math.max(0, parseInt(datos.fallos, 10) || 0),
+        hasta: Math.max(0, parseInt(datos.hasta, 10) || 0)
+      };
+    } catch (err) {
+      return { fallos: 0, hasta: 0 };
+    }
+  }
+
+  function guardarIntentos(datos) {
+    try { window.localStorage.setItem(LLAVE_INTENTOS, JSON.stringify(datos)); } catch (err) {}
+  }
+
+  function segundosDeEspera() {
+    return Math.max(0, Math.ceil((leerIntentos().hasta - Date.now()) / 1000));
+  }
+
+  /**
+   * Suma un fallo y, a partir del quinto, impone una espera que se duplica:
+   * 30 s, 1 min, 2 min, 4 min… hasta un tope de 15 min.
+   */
+  function anotarFallo() {
+    var datos = leerIntentos();
+    datos.fallos += 1;
+    if (datos.fallos >= MAX_INTENTOS) {
+      var nivel = Math.min(datos.fallos - MAX_INTENTOS, 5);
+      datos.hasta = Date.now() + Math.min(30 * Math.pow(2, nivel), 900) * 1000;
+    }
+    guardarIntentos(datos);
+    return datos;
+  }
+
+  function borrarIntentos() {
+    try { window.localStorage.removeItem(LLAVE_INTENTOS); } catch (err) {}
+  }
+
+  /** Pinta el estado de bloqueo en el botón de acceso. Devuelve true si bloquea. */
+  function pintarBloqueo() {
+    var boton = $('loginBtn');
+    var error = $('loginError');
+    var restante = segundosDeEspera();
+
+    if (restante <= 0) {
+      boton.disabled = false;
+      boton.textContent = 'Entrar al panel';
+      return false;
+    }
+
+    boton.disabled = true;
+    boton.textContent = 'Espera ' + restante + ' s';
+    error.hidden = false;
+    error.textContent =
+      'Demasiados intentos fallidos. Por seguridad, espera ' + restante +
+      ' segundos antes de volver a intentarlo.';
+    $('loginClave').setAttribute('aria-invalid', 'true');
+
+    setTimeout(pintarBloqueo, Math.min(restante * 1000, 15000));
+    return true;
+  }
+
+  /* --------------- Cierre de sesión automático por inactividad (3) ---------- */
+
+  var MINUTOS_INACTIVO = 20;
+  var temporizadorInactivo = null;
+
+  function reiniciarInactividad() {
+    clearTimeout(temporizadorInactivo);
+    if ($('appWrap').hidden) return;
+    temporizadorInactivo = setTimeout(function () {
+      saliendo = true;
+      S.cerrarSesion()
+        .then(function () { return S.registrarEvento('sesion_expirada', 'admin', 'Cierre por inactividad'); })
+        .then(function () {
+          saliendo = false;
+          mostrarLogin();
+          toast('Cerramos la sesión por inactividad.', 'error');
+        })
+        .catch(function () {
+          saliendo = false;
+          mostrarLogin();
+        });
+    }, MINUTOS_INACTIVO * 60 * 1000);
+  }
+
+  ['click', 'keydown', 'pointerdown', 'touchstart'].forEach(function (evento) {
+    document.addEventListener(evento, reiniciarInactividad, { passive: true });
+  });
+
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) reiniciarInactividad();
+  });
+
   $('loginForm').addEventListener('submit', function (e) {
     e.preventDefault();
+
+    if (pintarBloqueo()) return;
 
     var email = $('loginEmail').value.trim();
     var clave = $('loginClave').value;
@@ -116,33 +219,42 @@
 
     S.iniciarSesion(email, clave)
       .then(function (session) {
+        borrarIntentos();
         mostrarPanel(session);
         toast('Sesión iniciada.', 'ok');
+        S.registrarEvento('sesion_iniciada', 'admin', 'Acceso correcto');
       })
       .catch(function (err) {
         console.error('Error de acceso:', err);
-        var mensaje = String(err && err.message ? err.message : err);
+        var datos = anotarFallo();
+        // Un solo mensaje para cualquier fallo: no se revela si el correo
+        // existe, si está confirmado o si la contraseña es la incorrecta.
         error.hidden = false;
-        error.textContent = /invalid login credentials/i.test(mensaje)
-          ? 'Correo o contraseña incorrectos.'
-          : /email not confirmed/i.test(mensaje)
-            ? 'El correo del administrador no está confirmado en Supabase.'
-            : 'No se pudo iniciar sesión. Inténtalo de nuevo.';
+        error.textContent = 'Correo o contraseña incorrectos.';
         $('loginEmail').setAttribute('aria-invalid', 'true');
         $('loginClave').setAttribute('aria-invalid', 'true');
         $('loginClave').focus();
+        S.registrarEvento('acceso_fallido', 'admin', 'Intento fallido n.º ' + datos.fallos);
       })
-      .finally(function () {
+      .then(function () {
         boton.disabled = false;
         boton.textContent = 'Entrar al panel';
+        pintarBloqueo();
       });
   });
 
   $('btnSalir').addEventListener('click', function () {
     saliendo = true;
-    S.cerrarSesion()
-      .catch(function () {})
-      .finally(function () {
+    // Cierra la sesión en todos los dispositivos y revoca los tokens:
+    // si alguien copió la sesión, deja de servir.
+    S.cerrarTodasLasSesiones()
+      .then(function () { return S.registrarEvento('sesion_cerrada', 'admin', 'Cierre manual'); })
+      .then(function () {
+        saliendo = false;
+        mostrarLogin();
+        toast('Sesión cerrada en todos los dispositivos.');
+      })
+      .catch(function () {
         saliendo = false;
         mostrarLogin();
         toast('Sesión cerrada.');
@@ -153,6 +265,9 @@
   function vigilarSesion() {
     try {
       S.alCambiarSesion(function (evento, session) {
+        if (evento === 'TOKEN_REFRESHED' || evento === 'USER_UPDATED') {
+          return;
+        }
         if (saliendo) return;
         if (evento === 'SIGNED_OUT' && !$('appWrap').hidden) {
           mostrarLogin();
@@ -423,7 +538,7 @@
       return 'La base de datos todavía no tiene las tablas. Ejecuta supabase/schema.sql en el SQL Editor de Supabase.';
     }
     if (/row-level security|permission denied|new row violates/i.test(texto)) {
-      return 'La base de datos rechazó el cambio. Revisa que ejecutaste supabase/schema.sql completo.';
+      return 'La base de datos rechazó el cambio porque este correo no está en la lista de administradores. Añádelo en la tabla "administradores" de Supabase.';
     }
     if (/jwt|token/i.test(texto)) {
       return 'Tu sesión caducó. Vuelve a entrar al panel.';
@@ -492,6 +607,11 @@
       })
       .then(function () {
         toast(idEditando ? 'Producto actualizado.' : 'Producto publicado en la tienda.', 'ok');
+        S.registrarEvento(
+          idEditando ? 'producto_editado' : 'producto_creado',
+          'productos',
+          $('nombre').value.trim() || 'Producto'
+        );
         limpiarFormulario();
         return cargarCatalogo();
       })
@@ -634,6 +754,7 @@
         S.cambiarActivo(id, publicar)
           .then(function () {
             toast(publicar ? 'Producto publicado en la tienda.' : 'Producto oculto de la tienda.', 'ok');
+            S.registrarEvento(publicar ? 'producto_publicado' : 'producto_oculto', 'productos', id);
             return cargarCatalogo();
           })
           .catch(function (err) {
@@ -669,6 +790,7 @@
             }
             if (form.id === id) limpiarFormulario();
             toast('Producto eliminado definitivamente.', 'ok');
+            S.registrarEvento('producto_eliminado', 'productos', (producto && producto.nombre) || id);
             return cargarCatalogo();
           })
           .catch(function (err) {
@@ -699,7 +821,7 @@
           '<p class="fila-prod__nombre">' + esc(p.nombre) + '</p>' +
           '<p class="fila-prod__meta">' + esc(S.tipoLabel(p.tipo)) + ' · ' + esc(S.publicoLabel(p.publico)) + '</p>' +
           '<p class="fila-prod__precio">' + S.precioCOP(p.precio) +
-            (p.precioAnterior > p.precio ? ' <s style="color:#71717a;font-size:11px">' + S.precioCOP(p.precioAnterior) + '</s>' : '') +
+            (p.precioAnterior > p.precio ? ' <s class="fila-prod__antes">' + S.precioCOP(p.precioAnterior) + '</s>' : '') +
           '</p>' +
           '<p class="fila-prod__meta">Tallas: ' + (tallas.length ? esc(tallas.join(' · ')) : 'ninguna') + '</p>' +
           '<div class="fila-prod__tags">' + etiquetas + '</div>' +

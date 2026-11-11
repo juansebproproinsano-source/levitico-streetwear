@@ -384,9 +384,9 @@
         '<article class="card card--esqueleto" aria-hidden="true">' +
           '<div class="card__media esqueleto"></div>' +
           '<div class="card__cuerpo">' +
-            '<div class="esqueleto e-linea" style="width:80%"></div>' +
+            '<div class="esqueleto e-linea e-linea--larga"></div>' +
             '<div class="esqueleto e-linea e-linea--corta"></div>' +
-            '<div class="esqueleto e-linea" style="width:40%;margin-top:10px"></div>' +
+            '<div class="esqueleto e-linea e-linea--corta-2"></div>' +
           '</div>' +
         '</article>';
     }
@@ -811,7 +811,7 @@
           '<div class="item__controles">' +
             '<div class="item__cantidad">' +
               '<button data-accion="menos" aria-label="Quitar una unidad de ' + esc(i.nombre) + '">−</button>' +
-              '<span>' + i.cantidad + '</span>' +
+              '<span>' + (Math.max(1, Math.round(Number(i.cantidad) || 1))) + '</span>' +
               '<button data-accion="mas" aria-label="Añadir una unidad de ' + esc(i.nombre) + '">+</button>' +
             '</div>' +
             '<button class="item__quitar" data-accion="quitar">Quitar</button>' +
@@ -980,20 +980,22 @@
     btnNewsletter.textContent = 'Enviando…';
 
     S.suscribir(valor)
-      .then(function (r) {
-        msgNewsletter.textContent = r.nuevo
-          ? '¡Listo! Te avisamos en el próximo drop.'
-          : 'Ese correo ya estaba en la lista.';
+      .then(function () {
+        // Misma respuesta siempre: no se revela si el correo ya estaba.
+        msgNewsletter.textContent = '¡Listo! Te avisamos en el próximo drop.';
         msgNewsletter.className = 'newsletter__msg es-ok';
         formNewsletter.reset();
-        toast(r.nuevo ? 'Te añadimos a la lista de espera.' : 'Ya estabas en la lista.', 'ok');
+        toast('Te añadimos a la lista de espera.', 'ok');
       })
       .catch(function (err) {
         console.error('Error al suscribir:', err);
-        msgNewsletter.textContent = 'No pudimos guardar tu correo. Inténtalo de nuevo.';
+        var texto = String((err && err.message) || '');
+        msgNewsletter.textContent = /Demasiadas solicitudes/i.test(texto)
+          ? 'Demasiados intentos seguidos. Espera unos minutos.'
+          : 'No pudimos guardar tu correo. Inténtalo de nuevo.';
         msgNewsletter.className = 'newsletter__msg es-error';
       })
-      .finally(function () {
+      .then(function () {
         btnNewsletter.disabled = false;
         btnNewsletter.textContent = 'Unirme';
       });

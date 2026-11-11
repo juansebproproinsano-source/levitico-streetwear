@@ -554,6 +554,7 @@ fieldset.campo { border: 0; padding: 0; margin: 0; }
 }
 
 .fila-prod__precio { font-size: 12.5px; color: var(--texto); margin-top: 2px; }
+.fila-prod__antes { color: #71717a; font-size: 11px; }
 
 .fila-prod__tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 3px; }
 

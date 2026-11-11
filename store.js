@@ -100,6 +100,66 @@
     return base + '-' + azar;
   }
 
+  /**
+   * Limpia un texto que viene de fuera: quita caracteres de control, recorta
+   * espacios y limita el largo. No escapa HTML (de eso se encarga esc() en la
+   * tienda y textContent en el panel).
+   */
+  function limpiar(texto, maximo) {
+    return String(texto == null ? '' : texto)
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+      .trim()
+      .slice(0, maximo || 500);
+  }
+
+  /**
+   * Lista blanca de URLs para fotos y videos.
+   * Solo se aceptan rutas internas, archivos de Supabase Storage de este
+   * proyecto o rutas relativas. Cualquier otro dominio se descarta, así un
+   * enlace pegado en el panel no puede cargar contenido ajeno.
+   */
+  var dominioSupabase = String(CONFIG.supabaseUrl || '')
+    .replace(/^https?:\/\//i, '')
+    .replace(/\/.*$/, '')
+    .toLowerCase();
+
+  function urlSegura(valor) {
+    var texto = String(valor == null ? '' : valor).trim();
+    if (!texto) return '';
+
+    // Ruta relativa del propio sitio (assets/..., ./foto.jpg).
+    if (/^(?!\/\/)[./]/.test(texto) || /^assets\//.test(texto) || /^[\w-]+\.(jpg|jpeg|png|webp|mp4|webm|svg)$/i.test(texto)) {
+      return texto;
+    }
+
+    var url;
+    try {
+      url = new URL(texto, global.location.href);
+    } catch (err) {
+      return '';
+    }
+
+    if (url.protocol !== 'https:') return '';
+
+    var host = url.hostname.toLowerCase();
+    if (host === dominioSupabase) return url.href;
+    if (global.location && host === global.location.hostname.toLowerCase()) return url.href;
+
+    return '';
+  }
+
+  /** Tipos de archivo que se pueden subir al bucket. */
+  var MIMES_PERMITIDOS = [
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'video/mp4',
+    'video/webm'
+  ];
+
+  var TAMANO_MAXIMO = 50 * 1024 * 1024; // 50 MB, igual que el bucket
+
   /* ---------------------------- Cliente Supabase ---------------------------- */
 
   var clienteCache = null;
@@ -149,8 +209,8 @@
       limitado: !!f.limitado,
       color: f.color || '',
       descripcion: f.descripcion || '',
-      imagen: f.imagen_url || '',
-      video: f.video_url || '',
+      imagen: urlSegura(f.imagen_url),
+      video: urlSegura(f.video_url),
       sizes: Array.isArray(f.tallas) ? f.tallas : [],
       activo: f.activo !== false,
       orden: Number(f.orden) || 0
@@ -160,7 +220,7 @@
   /** Producto de la aplicación → fila para la base de datos. */
   function afila(p) {
     return {
-      nombre: String(p.nombre || '').trim(),
+      nombre: limpiar(p.nombre, 120),
       tipo: p.tipo || 'camiseta',
       publico: p.publico || 'unisex',
       precio: Math.round(Number(p.precio) || 0),
@@ -168,11 +228,19 @@
       estado: p.estado || 'disponible',
       nuevo: !!p.nuevo,
       limitado: !!p.limitado,
-      color: p.color || 'Negro',
-      descripcion: p.descripcion || '',
-      imagen_url: p.imagen || '',
-      video_url: p.video || '',
-      tallas: Array.isArray(p.sizes) ? p.sizes : [],
+      color: limpiar(p.color, 40) || 'Negro',
+      descripcion: limpiar(p.descripcion, 2000),
+      imagen_url: urlSegura(p.imagen),
+      video_url: urlSegura(p.video),
+      tallas: (Array.isArray(p.sizes) ? p.sizes : [])
+        .map(function (t) {
+          if (t && typeof t === 'object') {
+            return { label: limpiar(t.label, 12), disponible: !!t.disponible };
+          }
+          return { label: limpiar(t, 12), disponible: true };
+        })
+        .filter(function (t) { return t.label; })
+        .slice(0, 12),
       activo: p.activo === undefined ? true : !!p.activo,
       orden: Math.round(Number(p.orden) || 0)
     };
@@ -289,7 +357,20 @@
   }
 
   function cerrarSesion() {
-    return Promise.resolve(cliente().auth.signOut()).then(function () { return true; });
+    // scope 'local': cierra esta pestaña y deja las demás abiertas.
+    return Promise.resolve(cliente().auth.signOut({ scope: 'local' }))
+      .catch(function () { return null; })
+      .then(function () { return true; });
+  }
+
+  /**
+   * Cierra la sesión en TODOS los dispositivos y revoca los tokens de
+   * refresco. Sirve para cuando una contraseña pudo haberse visto.
+   */
+  function cerrarTodasLasSesiones() {
+    return Promise.resolve(cliente().auth.signOut({ scope: 'global' }))
+      .catch(function () { return null; })
+      .then(function () { return true; });
   }
 
   function alCambiarSesion(callback) {
@@ -343,21 +424,37 @@
 
   /**
    * Sube un archivo al bucket y devuelve su URL pública.
+   * Solo se aceptan imágenes/vídeos de la lista blanca y menos de 50 MB.
    * @returns {Promise<{url: string, ruta: string}>}
    */
   function subirArchivo(archivo, opciones) {
+    if (!archivo) return Promise.reject(new Error('No hay archivo.'));
+
+    var tipo = String(archivo.type || '').toLowerCase();
+    if (MIMES_PERMITIDOS.indexOf(tipo) === -1) {
+      return Promise.reject(new Error('Formato no permitido. Usa JPG, PNG, WEBP, MP4 o WEBM.'));
+    }
+
+    if (Number(archivo.size) > TAMANO_MAXIMO) {
+      return Promise.reject(new Error('El archivo pasa de 50 MB.'));
+    }
+
     var comprimir = !opciones || opciones.comprimir !== false;
-    var preparado = (comprimir && /^image\//.test(archivo.type))
+    var preparado = (comprimir && /^image\//.test(tipo))
       ? comprimirImagen(archivo)
       : Promise.resolve(archivo);
 
     return preparado.then(function (blob) {
-      var tipo = blob.type || archivo.type || 'application/octet-stream';
-      var ruta = 'productos/' + idUnico('m') + '.' + extensionDe(tipo);
+      var tipoFinal = String(blob.type || tipo || '').toLowerCase();
+      if (MIMES_PERMITIDOS.indexOf(tipoFinal) === -1) {
+        throw new Error('Formato no permitido. Usa JPG, PNG, WEBP, MP4 o WEBM.');
+      }
+
+      var ruta = 'productos/' + idUnico('m') + '.' + extensionDe(tipoFinal);
       var sb = cliente();
 
       return Promise.resolve(
-        sb.storage.from(BUCKET).upload(ruta, blob, { contentType: tipo, upsert: false })
+        sb.storage.from(BUCKET).upload(ruta, blob, { contentType: tipoFinal, upsert: false })
       ).then(function (res) {
         if (res.error) throw res.error;
         var publica = sb.storage.from(BUCKET).getPublicUrl(ruta);
@@ -381,32 +478,41 @@
 
   /* --------------------------- Pedidos y newsletter ------------------------- */
 
-  /** Guarda una copia del pedido en la base de datos. Nunca bloquea el checkout. */
-  function registrarPedido(items, total) {
+  /**
+   * Registra el pedido en la base de datos.
+   *
+   * El total NO se envía desde el navegador: lo calcula la función
+   * registrar_pedido() de PostgreSQL con los precios guardados en la tabla
+   * "productos". Si alguien edita el carrito o la consola, el precio que queda
+   * registrado sigue siendo el real.
+   *
+   * @param {Array} items  líneas del carrito ({ id, talla, cantidad })
+   * @returns {Promise<object|false>}
+   */
+  function registrarPedido(items) {
     if (!configurado().ok) return Promise.resolve(false);
 
-    var filas = (items || []).map(function (i) {
+    var lineas = (items || []).map(function (i) {
       return {
-        id: i.id,
-        nombre: i.nombre,
-        talla: i.talla,
-        cantidad: Number(i.cantidad) || 0,
-        precio: Number(i.precio) || 0
+        id: String(i.id || ''),
+        talla: limpiar(i.talla, 12),
+        cantidad: Math.max(1, Math.min(20, Math.round(Number(i.cantidad) || 1)))
       };
-    });
+    }).filter(function (i) { return i.id; });
+
+    if (!lineas.length) return Promise.resolve(false);
 
     return Promise.resolve(
-      cliente().from('pedidos').insert({
-        items: filas,
-        total: Math.round(Number(total) || 0),
-        origen: 'web'
-      })
+      cliente().rpc('registrar_pedido', { p_items: lineas })
     )
       .then(function (res) {
         if (res.error) throw res.error;
-        return true;
+        return res.data || true;
       })
-      .catch(function () { return false; });
+      .catch(function (err) {
+        console.warn('LEVÍTICO: no se pudo registrar el pedido en Supabase.', err && err.message);
+        return false;
+      });
   }
 
   /** Descarga los pedidos registrados (solo visible con sesión de administrador). */
@@ -432,19 +538,39 @@
     });
   }
 
-  /** Añade un correo a la lista de espera. */
+  /**
+   * Añade un correo a la lista de espera.
+   *
+   * Devuelve SIEMPRE la misma respuesta, esté el correo apuntado o no. Así
+   * nadie puede averiguar qué direcciones están en la lista probando el
+   * formulario.
+   */
   function suscribir(email) {
-    var correo = String(email || '').trim().toLowerCase();
+    var correo = limpiar(email, 160).toLowerCase();
     if (!configurado().ok) return Promise.reject(new Error('sin-config'));
+    if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(correo)) {
+      return Promise.reject(new Error('correo-invalido'));
+    }
 
-    return Promise.resolve(cliente().from('suscriptores').insert({ email: correo }))
+    return Promise.resolve(cliente().rpc('suscribir_email', { p_email: correo }))
       .then(function (res) {
-        if (res.error) {
-          if (res.error.code === '23505') return { nuevo: false };
-          throw res.error;
-        }
-        return { nuevo: true };
+        if (res.error) throw res.error;
+        return { ok: true };
       });
+  }
+
+  /** Anota un evento en el registro de auditoría (solo administradores). */
+  function registrarEvento(tipo, ruta, detalle) {
+    if (!configurado().ok) return Promise.resolve(false);
+    return Promise.resolve(
+      cliente().rpc('registrar_evento', {
+        p_tipo: limpiar(tipo, 40),
+        p_ruta: limpiar(ruta, 120),
+        p_detalle: limpiar(detalle, 400)
+      })
+    )
+      .then(function (res) { return !res.error; })
+      .catch(function () { return false; });
   }
 
   /* --------------------------------- Filtros -------------------------------- */
@@ -535,17 +661,23 @@
     sesion: sesion,
     iniciarSesion: iniciarSesion,
     cerrarSesion: cerrarSesion,
+    cerrarTodasLasSesiones: cerrarTodasLasSesiones,
     alCambiarSesion: alCambiarSesion,
     subirArchivo: subirArchivo,
     borrarArchivo: borrarArchivo,
     registrarPedido: registrarPedido,
     cargarPedidos: cargarPedidos,
     suscribir: suscribir,
+    registrarEvento: registrarEvento,
     tallasDe: tallasDe,
     tipoLabel: tipoLabel,
     publicoLabel: publicoLabel,
     precioCOP: precioCOP,
     idUnico: idUnico,
+    limpiar: limpiar,
+    urlSegura: urlSegura,
+    MIMES_PERMITIDOS: MIMES_PERMITIDOS,
+    TAMANO_MAXIMO: TAMANO_MAXIMO,
     filtrarPorCategoria: filtrarPorCategoria,
     coincideCategoria: coincideCategoria,
     normalizar: normalizar,

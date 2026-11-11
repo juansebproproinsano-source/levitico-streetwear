@@ -22,9 +22,11 @@ Tiempo estimado: 30–40 minutos.
 3. Abre el archivo `supabase/schema.sql` de este proyecto, cópialo completo y pégalo en el editor.
 4. Pulsa **Run** (o `Ctrl + Enter`).
 
-El script crea las tablas `productos`, `pedidos` y `suscriptores`, activa las reglas de seguridad (RLS) y prepara el espacio de almacenamiento `productos`. Puedes volver a ejecutarlo sin romper nada.
+El script crea las tablas `productos`, `pedidos`, `suscriptores`, `administradores`, `eventos` y `contador_solicitudes`, activa las reglas de seguridad (RLS), define la lista blanca de administradores, los límites de solicitudes por IP y prepara el espacio de almacenamiento `productos`. Puedes volver a ejecutarlo sin romper nada.
 
-Al terminar, comprueba en **Table Editor** que aparecen las tres tablas vacías.
+Al terminar, comprueba en **Table Editor** que aparecen las tablas vacías.
+
+> **Antes de pulsar Run**, mira la línea marcada `-- >>> CORREO DEL ADMINISTRADOR <<<`. Trae `soporte@leviticostreetwear.com`. Si el usuario que vas a crear en el paso 3 usará otro correo, cámbialo ahí: es el único que tendrá permiso sobre el catálogo y los pedidos.
 
 ## 3. Crea tu usuario administrador
 
@@ -35,7 +37,13 @@ Al terminar, comprueba en **Table Editor** que aparecen las tres tablas vacías.
 
 Ese usuario es el único que puede entrar al panel. No hay registro público: nadie más puede crearse una cuenta.
 
-> Guarda el correo y la contraseña. Son el acceso a `admin.html`.
+> **El correo tiene que coincidir** con el de la tabla `administradores` (paso 2). Si creas el usuario con otro correo podrás iniciar sesión, pero la base rechazará cualquier cambio. Para arreglarlo, añade ese correo a la tabla:
+
+```sql
+insert into public.administradores (email) values ('tu-correo@ejemplo.com');
+```
+
+> Guarda el correo y la contraseña. Son el acceso a `admin.html`. Usa una contraseña larga: el panel bloquea tras cinco fallos, pero la última barrera es la contraseña.
 
 ## 4. Copia la URL y la clave pública
 
@@ -91,7 +99,7 @@ Si algo falla, el panel lo dice con un mensaje concreto: configuración incomple
 
 La tienda es estática: no necesita compilación ni servidor propio. Cualquiera de estas opciones es gratuita y admite dominio propio.
 
-> **Ya está publicado.** Tienda: https://levitico-streetwear.vercel.app · Código: https://github.com/juansebproproinsano-source/levitico-streetwear. Los pasos siguientes quedan como referencia para volver a desplegar o cambiar de cuenta.
+> **Ya está publicado.** Tienda: https://levitico-streetwear.vercel.app · Código: https://github.com/juansebproinsano-source/levitico-streetwear. Los pasos siguientes quedan como referencia para volver a desplegar o cambiar de cuenta.
 
 ### GitHub + Vercel (recomendado)
 
@@ -183,17 +191,26 @@ El enlace a los términos aparece en el pie, en las notas del carrito y en la fi
 **«Faltan la URL y la clave pública de Supabase»**
 `config.js` está vacío o no se guardó. Complétalo y recarga.
 
-**El panel no entra y dice que el correo no está confirmado**
-En Supabase, **Authentication → Users**, confirma el usuario o créalo con la confirmación automática.
+**El panel dice «Correo o contraseña incorrectos» y la contraseña es la buena**
+Ese mensaje sale siempre, a propósito, para no revelar qué falló. Comprueba en Supabase, **Authentication → Users**, que el usuario existe y está confirmado; y que su correo es el mismo de la tabla `administradores`.
 
-**«La base de datos rechazó el cambio»**
-No se ejecutó `supabase/schema.sql` completo. Vuelve al paso 2 y ejecútalo de nuevo.
+**«La base de datos rechazó el cambio porque este correo no está en la lista de administradores»**
+El usuario existe pero su correo no está autorizado. Añádelo en la tabla `administradores` (paso 3) o cámbialo en el paso 2 y vuelve a ejecutar `schema.sql`.
+
+**«La base de datos todavía no tiene las tablas»**
+No se ejecutó `supabase/schema.sql`. Vuelve al paso 2 y ejecútalo completo.
 
 **La foto no sube**
-Debe ser JPG, PNG o WebP de menos de 12 MB. La compresión es automática; si falla, prueba con otra imagen.
+Debe ser JPG, PNG o WebP de menos de 50 MB (el video, MP4 o WebM, con el mismo tope). La compresión es automática; si falla, prueba con otra imagen.
 
-**El correo del newsletter dice que ya estaba en la lista**
-Es correcto: cada correo se guarda una sola vez.
+**El newsletter responde siempre lo mismo, aunque el correo ya estuviera apuntado**
+Es intencionado: la respuesta idéntica evita que alguien pueda averiguar qué direcciones están en la lista. Cada correo se guarda una sola vez.
+
+**«Demasiados intentos seguidos» o «Demasiadas solicitudes seguidas»**
+Saltó el límite por IP: 5 pedidos cada 10 minutos y 3 altas de newsletter cada 10 minutos. Espera unos minutos. Si te pasa a ti probando, es que el límite funciona.
+
+**Tras cinco intentos fallidos el botón queda bloqueado**
+Es el bloqueo de seguridad. La espera empieza en 30 segundos y se duplica hasta 15 minutos. Se borra solo al entrar bien o al limpiar los datos del sitio en el navegador.
 
 **La tienda carga pero no muestra productos**
 El catálogo está vacío o los productos están ocultos. Entra al panel y publica el primero.

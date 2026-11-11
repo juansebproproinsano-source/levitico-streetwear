@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# El panel de administración no debe indexarse jamás.
+Disallow: /admin
+Disallow: /admin.html
+
+# Carpetas internas (además están excluidas en .vercelignore).
+Disallow: /supabase/
+Disallow: /assets/privado/
