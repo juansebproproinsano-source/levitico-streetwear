@@ -3,7 +3,7 @@
 Tienda de streetwear conceptual («Viste tu Fe») construida con HTML, CSS y JavaScript puros, sin paso de compilación. El catálogo, las fotos, los pedidos y la lista de correos viven en Supabase; los pedidos se cierran por WhatsApp.
 
 **Tienda publicada:** https://levitico-streetwear.vercel.app
-**Código:** https://github.com/juansebproinsano-source/levitico-streetwear
+**Código:** https://github.com/juansebproproinsano-source/levitico-streetwear
 **Términos:** https://levitico-streetwear.vercel.app/terminos.html
 
 > Antes de abrir al público falta ejecutar `supabase/schema.sql` en Supabase y crear el usuario administrador. La guía paso a paso está en [`SETUP.md`](SETUP.md).

@@ -99,7 +99,7 @@ Si algo falla, el panel lo dice con un mensaje concreto: configuración incomple
 
 La tienda es estática: no necesita compilación ni servidor propio. Cualquiera de estas opciones es gratuita y admite dominio propio.
 
-> **Ya está publicado.** Tienda: https://levitico-streetwear.vercel.app · Código: https://github.com/juansebproinsano-source/levitico-streetwear. Los pasos siguientes quedan como referencia para volver a desplegar o cambiar de cuenta.
+> **Ya está publicado.** Tienda: https://levitico-streetwear.vercel.app · Código: https://github.com/juansebproproinsano-source/levitico-streetwear. Los pasos siguientes quedan como referencia para volver a desplegar o cambiar de cuenta.
 
 ### GitHub + Vercel (recomendado)
 
