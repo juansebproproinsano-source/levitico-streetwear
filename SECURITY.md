@@ -83,8 +83,27 @@ La CSP se cumple sin excepciones: no hay ni un `<script>` escrito dentro del HTM
 - **`robots.txt`** desautoriza `/admin`, `/admin.html` y `/supabase/`.
 - **`X-Robots-Tag: noindex, nofollow, noarchive, nosnippet`** y `Cache-Control: no-store` en `/admin.html` y `/admin`.
 - **El panel ya no está enlazado** en la tienda ni en los términos. Se entra escribiendo la dirección a mano o desde un marcador.
-- **`cleanUrls` y `trailingSlash: false`**: una sola URL canónica por página; no hay listados de directorio que revelen archivos.
-- Los archivos internos no existen en el despliegue, así que pedirlos devuelve 404 en lugar de servir su contenido.
+- **Sin listados de directorio.** El alojamiento solo entrega los archivos publicados: una ruta que no corresponde a un archivo devuelve 404. No hay índice de carpetas.
+
+## 7. Comprobado en producción (11 nov 2026)
+
+Consultado sobre `https://levitico-streetwear.vercel.app`:
+
+| Comprobación | Resultado |
+| --- | --- |
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` |
+| `Content-Security-Policy` | la del archivo, sin `unsafe-inline` |
+| `X-Frame-Options` | `DENY` |
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Robots-Tag` en `/admin.html` | `noindex, nofollow, noarchive, nosnippet` |
+| `Cache-Control` en `/admin.html` | `no-store, max-age=0` |
+| `/supabase/schema.sql` | 404 |
+| `/.env.local` | 404 |
+| `/publicar.ps1` | 404 |
+| `/README.md` y `/SECURITY.md` | 404 |
+| `/robots.txt` | 200 con `Disallow: /admin` y `/admin.html` |
+
+En local, con la misma CSP inyectada en las tres páginas (`qa/qa-csp.js`): cero violaciones en tienda, panel y términos; el panel entra, la lista se pinta y `anio.js` escribe el año.
 
 ## Lo que no aplica, y por qué
 
