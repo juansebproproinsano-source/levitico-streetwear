@@ -46,10 +46,14 @@ function Escribir-Log {
 }
 
 function Obtener-Vercel {
-  $cmd = Get-Command 'vercel' -ErrorAction SilentlyContinue
+  # Se prefiere el .cmd: el .ps1 de npm devuelve stderr y PowerShell lo
+  # interpreta como error nativo.
+  $cmd = Get-Command 'vercel.cmd' -ErrorAction SilentlyContinue
   if ($cmd) { return $cmd.Source }
   $ruta = Join-Path $env:APPDATA 'npm\vercel.cmd'
   if (Test-Path -LiteralPath $ruta) { return $ruta }
+  $otro = Get-Command 'vercel' -ErrorAction SilentlyContinue
+  if ($otro) { return $otro.Source }
   return $null
 }
 
@@ -95,10 +99,21 @@ function Sincronizar-Git {
     if ($Texto) { $msg = $Texto } else { $msg = 'Actualización ' + (Get-Date).ToString('yyyy-MM-dd HH:mm') }
   }
   try {
-    & git add -A 2>&1 | Out-Null
-    & git commit -m $msg 2>&1 | Out-Null
-    $push = & git push 2>&1
-    if ($LASTEXITCODE -eq 0) {
+    $preferencia = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+      & git add -A 2>&1 | Out-Null
+      & git commit -m $msg 2>&1 | Out-Null
+      $push = & git push 2>&1
+      if ($LASTEXITCODE -ne 0) {
+        # Primera vez en una rama: fija el remoto y reintenta.
+        $push = & git push -u origin HEAD 2>&1
+      }
+      $ok = ($LASTEXITCODE -eq 0)
+    } finally {
+      $ErrorActionPreference = $preferencia
+    }
+    if ($ok) {
       Escribir-Log "GitHub al día: $msg" 'DarkCyan'
     } else {
       Escribir-Log ("GitHub sin cambios o push fallido: " + ($push -join ' ')) 'DarkYellow'
@@ -126,20 +141,37 @@ function Publicar {
 
   Escribir-Log 'Publicando en Vercel…' 'Cyan'
   $inicio = Get-Date
-  $salida = & $vercel --prod --yes 2>&1
-  $codigo = $LASTEXITCODE
+  # Vercel escribe avisos por stderr y PowerShell los trata como error nativo:
+  # durante la llamada se permite continuar y se mira el código de salida real.
+  $preferencia = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try {
+    $salida = & $vercel --prod --yes 2>&1
+    $codigo = $LASTEXITCODE
+  } finally {
+    $ErrorActionPreference = $preferencia
+  }
   $segundos = [math]::Round(((Get-Date) - $inicio).TotalSeconds)
 
   foreach ($linea in $salida) {
-    try { Add-Content -LiteralPath $log -Value ([string]$linea) -Encoding UTF8 } catch { }
+    $texto = ([string]$linea).Trim()
+    # Los errores nativos de PowerShell no aportan nada al registro.
+    if (-not $texto) { continue }
+    if ($texto -like '*RemoteException*') { continue }
+    try { Add-Content -LiteralPath $log -Value $texto -Encoding UTF8 } catch { }
   }
 
   if ($codigo -eq 0) {
     $url = ''
+    # Primero el dominio de producción ("Aliased"), que es el que ve el cliente.
     foreach ($linea in $salida) {
       $texto = [string]$linea
-      if ($texto -match 'https://[^\s]+\.vercel\.app') {
-        $url = $matches[0]
+      if ($texto -match 'Aliased\s+(https://[^\s]+\.vercel\.app)') { $url = $matches[1] }
+    }
+    if (-not $url) {
+      foreach ($linea in $salida) {
+        $texto = [string]$linea
+        if ($texto -match '(https://[^\s]+\.vercel\.app)') { $url = $matches[1]; break }
       }
     }
     if ($url) {
