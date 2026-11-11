@@ -120,6 +120,30 @@ vercel login
 vercel --prod
 ```
 
+### Publicar solo al guardar (Windows)
+
+La carpeta trae un vigilante: `publicar.ps1`. Queda abierto en una ventana, mira los archivos del proyecto y, cada vez que guardas un cambio, publica en Vercel sin que toques nada.
+
+La forma más fácil: **doble clic en `publicar.bat`**. La ventana queda abierta publicando sola. Para detenerla, ciérrala o pulsa `Ctrl+C`.
+
+Desde PowerShell también sirve:
+
+```powershell
+.\publicar.ps1                  # vigila y publica al guardar
+.\publicar.ps1 -Ahora           # publica una sola vez y sale
+.\publicar.ps1 -Git             # además hace commit y push a GitHub
+.\publicar.ps1 -Espera 10       # espera 10 s de silencio (por defecto 6)
+```
+
+Qué tienes que saber:
+
+- Espera unos segundos de silencio después del último guardado, para no publicar cinco veces mientras guardas varios archivos.
+- Solo vigila lo que ve el visitante: páginas, estilos, scripts, imágenes y fuentes. Ignora `supabase/`, `.git`, `.vercel` y `node_modules`.
+- Cada publicación queda anotada con la hora en `publicar.log`, junto con la URL del despliegue. Si algo falla, ese archivo dice qué pasó.
+- Necesita Vercel CLI instalado y la sesión iniciada (`npm i -g vercel` y `vercel login`, una sola vez).
+- Con `-Git` el cambio también queda respaldado en GitHub. Sin `-Git`, el sitio se publica pero el repositorio no se actualiza.
+- Un cambio de producto (precio, foto, tallas) **no** necesita publicar: se guarda en Supabase y aparece al instante en la tienda.
+
 ### Netlify (alternativa)
 
 1. Entra a [netlify.com](https://www.netlify.com) y crea una cuenta.
@@ -147,6 +171,7 @@ El enlace a los términos aparece en el pie, en las notas del carrito y en la fi
 
 ## 8. Rutina del día a día
 
+- **Cambiar un texto o el diseño:** guarda el archivo con el vigilante abierto (`publicar.bat`) y sale publicado solo en unos segundos.
 - **Publicar una prenda:** panel → llenar formulario → subir foto → *Guardar producto*. Aparece de inmediato en la tienda.
 - **Marcar agotada una talla:** editar el producto y tocar el chip de la talla.
 - **Quitar del catálogo sin borrar:** botón *Ocultar*. El producto queda archivado y puedes volver a publicarlo.

@@ -18,6 +18,18 @@ python -m http.server 8123
 
 Luego abre `http://localhost:8123/`. La tienda y el panel (`/admin.html`) funcionan con cualquier servidor estático.
 
+## Cómo se publica
+
+El sitio se publica en Vercel. Para no escribir comandos cada vez, la carpeta trae `publicar.bat`: doble clic y queda una ventana vigilando. Al guardar cualquier página, estilo, script o imagen, publica sola en unos segundos y anota el resultado en `publicar.log`.
+
+```powershell
+.\publicar.ps1            # vigilante
+.\publicar.ps1 -Ahora     # publica una vez
+.\publicar.ps1 -Git       # además hace commit y push a GitHub
+```
+
+Los cambios de producto (precio, fotos, tallas) no necesitan publicar: se guardan en Supabase y se ven al instante. Los detalles están en [`SETUP.md`](SETUP.md).
+
 ## Estructura
 
 ```
@@ -35,6 +47,8 @@ assets/           Fotografías y fuentes
 supabase/
   schema.sql      Tablas, permisos y almacenamiento — se ejecuta una vez
 SETUP.md          Guía de instalación y publicación
+publicar.ps1      Publica en Vercel al guardar (vigilante)
+publicar.bat      Doble clic para abrir el vigilante
 vercel.json       Cabeceras de seguridad y caché para Vercel
 netlify.toml      Configuración de despliegue en Netlify
 ```
