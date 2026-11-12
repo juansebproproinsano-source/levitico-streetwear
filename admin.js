@@ -604,6 +604,9 @@
     if (codigo === 'PGRST205' || /could not find the table/i.test(texto)) {
       return 'La base de datos todavía no tiene las tablas. Ejecuta supabase/schema.sql en el SQL Editor de Supabase.';
     }
+    if (codigo === 'PGRST204' || /could not find the .{0,40}column/i.test(texto)) {
+      return 'A la base de datos le faltan las columnas de la galería (imagenes y videos). No se guardó nada para no perder las fotos extra. Abre el SQL Editor de Supabase, pega el archivo supabase/actualizar-galeria.sql y pulsa «Run»; después vuelve a guardar.';
+    }
     if (/row-level security|permission denied|new row violates/i.test(texto)) {
       return 'La base de datos rechazó el cambio porque este correo no está en la lista de administradores. Añádelo en la tabla "administradores" de Supabase.';
     }
