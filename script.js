@@ -595,10 +595,99 @@
   var modal = $('modalProducto');
   var modalImagen = $('modalImagen');
   var modalVideo = $('modalVideo');
+  var modalTira = $('modalTira');
+  var modalAnterior = $('modalAnterior');
+  var modalSiguiente = $('modalSiguiente');
   var modalTallas = $('modalTallas');
   var modalError = $('modalError');
   var modalAgregar = $('modalAgregar');
   var ultimoFoco = null;
+
+  // Galería de la ficha: fotos primero, luego videos.
+  var mediosModal = [];
+  var indiceModal = 0;
+
+  /** Muestra el medio activo y marca su miniatura. */
+  function pintarMedioModal() {
+    var m = mediosModal[indiceModal];
+    if (!m) return;
+
+    if (m.tipo === 'video') {
+      modalImagen.hidden = true;
+      modalVideo.hidden = false;
+      modalVideo.src = m.url;
+    } else {
+      modalVideo.pause();
+      modalVideo.removeAttribute('src');
+      modalVideo.hidden = true;
+      modalImagen.hidden = false;
+      modalImagen.src = m.url || PLACEHOLDER;
+    }
+
+    Array.prototype.forEach.call(modalTira.children, function (boton, i) {
+      boton.classList.toggle('is-activo', i === indiceModal);
+      if (i === indiceModal) boton.setAttribute('aria-current', 'true');
+      else boton.removeAttribute('aria-current');
+    });
+  }
+
+  function irAMedio(i) {
+    if (!mediosModal.length) return;
+    indiceModal = (i + mediosModal.length) % mediosModal.length;
+    pintarMedioModal();
+  }
+
+  /** Dibuja la tira de miniaturas; se oculta si solo hay un archivo. */
+  function pintarTiraModal() {
+    modalTira.innerHTML = '';
+    var varias = mediosModal.length > 1;
+    modalTira.hidden = !varias;
+    modalAnterior.hidden = !varias;
+    modalSiguiente.hidden = !varias;
+    if (!varias) return;
+
+    mediosModal.forEach(function (m, i) {
+      var boton = document.createElement('button');
+      boton.type = 'button';
+      boton.className = 'modal__tira-btn' + (m.tipo === 'video' ? ' modal__tira-btn--video' : '');
+      boton.setAttribute('aria-label', (m.tipo === 'video' ? 'Ver video ' : 'Ver foto ') + (i + 1) + ' de ' + mediosModal.length);
+
+      if (m.tipo === 'video') {
+        var clip = document.createElement('video');
+        clip.src = m.url + '#t=0.1';
+        clip.muted = true;
+        clip.playsInline = true;
+        clip.preload = 'metadata';
+        boton.appendChild(clip);
+
+        var senal = document.createElement('span');
+        senal.className = 'modal__tira-play';
+        senal.setAttribute('aria-hidden', 'true');
+        senal.textContent = '▶';
+        boton.appendChild(senal);
+      } else {
+        var miniatura = document.createElement('img');
+        miniatura.src = m.url;
+        miniatura.alt = '';
+        miniatura.loading = 'lazy';
+        boton.appendChild(miniatura);
+      }
+
+      boton.addEventListener('click', function () { irAMedio(i); });
+      modalTira.appendChild(boton);
+    });
+  }
+
+  /** Arma la lista de medios del producto (con respaldo a la portada vieja). */
+  function mediosDeProducto(p) {
+    var lista = [];
+    S.listaUrls(p.imagenes && p.imagenes.length ? p.imagenes : p.imagen)
+      .forEach(function (url) { lista.push({ tipo: 'foto', url: url }); });
+    S.listaUrls(p.videos && p.videos.length ? p.videos : p.video)
+      .forEach(function (url) { lista.push({ tipo: 'video', url: url }); });
+    if (!lista.length) lista.push({ tipo: 'foto', url: '' });
+    return lista;
+  }
 
   function elementosEnfocables(raiz) {
     return Array.prototype.slice.call(
@@ -631,19 +720,15 @@
 
     $('modalBadges').innerHTML = badges(p);
 
-    // Imagen / video
+    // Galería de fotos y videos
+    mediosModal = mediosDeProducto(p);
+    indiceModal = 0;
+    modalImagen.alt = p.nombre;
     modalVideo.pause();
     modalVideo.removeAttribute('src');
     modalVideo.hidden = true;
-
-    modalImagen.hidden = false;
-    modalImagen.alt = p.nombre;
-    modalImagen.src = p.imagen || PLACEHOLDER;
-
-    if (p.video) {
-      modalVideo.hidden = false;
-      modalVideo.src = p.video;
-    }
+    pintarTiraModal();
+    pintarMedioModal();
 
     // Tallas
     var tallas = Array.isArray(p.sizes) && p.sizes.length
@@ -693,7 +778,21 @@
   $('modalCerrar').addEventListener('click', cerrarModal);
   document.querySelector('[data-cerrar-modal]').addEventListener('click', cerrarModal);
 
+  modalAnterior.addEventListener('click', function () { irAMedio(indiceModal - 1); });
+  modalSiguiente.addEventListener('click', function () { irAMedio(indiceModal + 1); });
+
   modal.addEventListener('keydown', function (e) {
+    var enCampo = /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName);
+    if (!enCampo && e.key === 'ArrowLeft') {
+      e.preventDefault();
+      irAMedio(indiceModal - 1);
+      return;
+    }
+    if (!enCampo && e.key === 'ArrowRight') {
+      e.preventDefault();
+      irAMedio(indiceModal + 1);
+      return;
+    }
     if (e.key !== 'Tab') return;
     var enfocables = elementosEnfocables(modal);
     if (!enfocables.length) return;

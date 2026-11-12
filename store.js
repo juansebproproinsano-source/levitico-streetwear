@@ -160,6 +160,30 @@
 
   var TAMANO_MAXIMO = 50 * 1024 * 1024; // 50 MB, igual que el bucket
 
+  /** Cuántas fotos y videos admite cada producto. */
+  var MAX_FOTOS = 6;
+  var MAX_VIDEOS = 2;
+
+  /**
+   * Convierte lo que venga de la base de datos (array, texto suelto o nada)
+   * en una lista de URLs permitidas, sin vacías ni repetidas.
+   */
+  function listaUrls(valor) {
+    var bruto = Array.isArray(valor) ? valor : (valor ? [valor] : []);
+    var vistos = Object.create(null);
+    var salida = [];
+
+    bruto.forEach(function (elemento) {
+      var limpia = urlSegura(elemento);
+      if (limpia && !vistos[limpia]) {
+        vistos[limpia] = true;
+        salida.push(limpia);
+      }
+    });
+
+    return salida;
+  }
+
   /* ---------------------------- Cliente Supabase ---------------------------- */
 
   var clienteCache = null;
@@ -197,6 +221,13 @@
 
   /** Fila de la base de datos → producto de la aplicación. */
   function desdeFila(f) {
+    // Las listas mandan; si una fila vieja solo trae una portada, se usa esa.
+    var imagenes = listaUrls(f.imagenes);
+    if (!imagenes.length) imagenes = listaUrls(f.imagen_url);
+
+    var videos = listaUrls(f.videos);
+    if (!videos.length) videos = listaUrls(f.video_url);
+
     return {
       id: f.id,
       nombre: f.nombre || '',
@@ -209,8 +240,10 @@
       limitado: !!f.limitado,
       color: f.color || '',
       descripcion: f.descripcion || '',
-      imagen: urlSegura(f.imagen_url),
-      video: urlSegura(f.video_url),
+      imagenes: imagenes,
+      videos: videos,
+      imagen: imagenes[0] || '',
+      video: videos[0] || '',
       sizes: Array.isArray(f.tallas) ? f.tallas : [],
       activo: f.activo !== false,
       orden: Number(f.orden) || 0
@@ -219,6 +252,14 @@
 
   /** Producto de la aplicación → fila para la base de datos. */
   function afila(p) {
+    var fotos = listaUrls(p.imagenes);
+    if (!fotos.length) fotos = listaUrls(p.imagen);
+    fotos = fotos.slice(0, MAX_FOTOS);
+
+    var videos = listaUrls(p.videos);
+    if (!videos.length) videos = listaUrls(p.video);
+    videos = videos.slice(0, MAX_VIDEOS);
+
     return {
       nombre: limpiar(p.nombre, 120),
       tipo: p.tipo || 'camiseta',
@@ -230,8 +271,12 @@
       limitado: !!p.limitado,
       color: limpiar(p.color, 40) || 'Negro',
       descripcion: limpiar(p.descripcion, 2000),
-      imagen_url: urlSegura(p.imagen),
-      video_url: urlSegura(p.video),
+      // La portada se guarda también en las columnas sueltas: así la usan
+      // la tarjeta, el carrito y cualquier consulta antigua.
+      imagen_url: fotos[0] || '',
+      video_url: videos[0] || '',
+      imagenes: fotos,
+      videos: videos,
       tallas: (Array.isArray(p.sizes) ? p.sizes : [])
         .map(function (t) {
           if (t && typeof t === 'object') {
@@ -676,8 +721,11 @@
     idUnico: idUnico,
     limpiar: limpiar,
     urlSegura: urlSegura,
+    listaUrls: listaUrls,
     MIMES_PERMITIDOS: MIMES_PERMITIDOS,
     TAMANO_MAXIMO: TAMANO_MAXIMO,
+    MAX_FOTOS: MAX_FOTOS,
+    MAX_VIDEOS: MAX_VIDEOS,
     filtrarPorCategoria: filtrarPorCategoria,
     coincideCategoria: coincideCategoria,
     normalizar: normalizar,

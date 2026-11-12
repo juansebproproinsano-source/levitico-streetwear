@@ -31,12 +31,9 @@
 
   var form = {
     id: '',
-    urlImagen: '',
-    urlVideo: '',
-    archivoImagen: null,
-    archivoVideo: null,
-    urlPreviewImagen: '',
-    urlPreviewVideo: '',
+    fotos: [],   // { url, archivo, preview } — la primera es la portada
+    videos: [],  // { url, archivo, preview }
+    anteriores: [], // URLs guardadas del producto que se está editando
     tallas: {}
   };
 
@@ -349,53 +346,179 @@
 
   /* --------------------------------- Media ---------------------------------- */
 
-  function pintarPreviewImagen(src) {
-    var caja = $('previewImagen');
-    caja.innerHTML = '';
-    if (src) {
-      var img = document.createElement('img');
-      img.src = src;
-      img.alt = 'Vista previa de la foto';
-      caja.appendChild(img);
-      $('btnQuitarImagen').hidden = false;
-    } else {
-      var span = document.createElement('span');
-      span.className = 'media__vacio';
-      span.textContent = 'Sin foto';
-      caja.appendChild(span);
-      $('btnQuitarImagen').hidden = true;
+  /** Un medio del formulario: ya guardado (url), recién elegido (archivo) o ambos. */
+  function nuevoMedio(url) {
+    return { url: url || '', archivo: null, preview: '' };
+  }
+
+  function liberarMedio(m) {
+    if (m && m.preview) URL.revokeObjectURL(m.preview);
+  }
+
+  function liberarLista(lista) {
+    (lista || []).forEach(liberarMedio);
+  }
+
+  /** Dibuja una tira de fichas con sus controles (mover y quitar). */
+  function pintarRejilla(contenedor, lista, tipo) {
+    if (!contenedor) return;
+    contenedor.innerHTML = '';
+
+    lista.forEach(function (m, i) {
+      var src = m.preview || m.url;
+      var ficha = document.createElement('figure');
+      ficha.className = 'media-ficha';
+      ficha.setAttribute('data-indice', String(i));
+
+      var medio;
+      if (tipo === 'video') {
+        medio = document.createElement('video');
+        medio.src = src;
+        medio.muted = true;
+        medio.playsInline = true;
+        medio.preload = 'metadata';
+      } else {
+        medio = document.createElement('img');
+        medio.src = src;
+        medio.alt = 'Foto ' + (i + 1) + ' del producto';
+        medio.loading = 'lazy';
+      }
+      ficha.appendChild(medio);
+
+      if (i === 0) {
+        var portada = document.createElement('span');
+        portada.className = 'media-ficha__portada';
+        portada.textContent = tipo === 'video' ? 'Principal' : 'Portada';
+        ficha.appendChild(portada);
+      }
+
+      var acciones = document.createElement('div');
+      acciones.className = 'media-ficha__acciones';
+
+      var izquierda = document.createElement('button');
+      izquierda.type = 'button';
+      izquierda.className = 'media-ficha__accion';
+      izquierda.setAttribute('data-mover', '-1');
+      izquierda.setAttribute('aria-label', 'Mover ' + (tipo === 'video' ? 'video' : 'foto') + ' ' + (i + 1) + ' a la izquierda');
+      izquierda.textContent = '←';
+      izquierda.disabled = i === 0;
+      acciones.appendChild(izquierda);
+
+      var derecha = document.createElement('button');
+      derecha.type = 'button';
+      derecha.className = 'media-ficha__accion';
+      derecha.setAttribute('data-mover', '1');
+      derecha.setAttribute('aria-label', 'Mover ' + (tipo === 'video' ? 'video' : 'foto') + ' ' + (i + 1) + ' a la derecha');
+      derecha.textContent = '→';
+      derecha.disabled = i === lista.length - 1;
+      acciones.appendChild(derecha);
+
+      var quitar = document.createElement('button');
+      quitar.type = 'button';
+      quitar.className = 'media-ficha__accion media-ficha__accion--quitar';
+      quitar.setAttribute('data-quitar', '');
+      quitar.setAttribute('aria-label', 'Quitar ' + (tipo === 'video' ? 'video' : 'foto') + ' ' + (i + 1));
+      quitar.textContent = '✕';
+      acciones.appendChild(quitar);
+
+      ficha.appendChild(acciones);
+      contenedor.appendChild(ficha);
+    });
+
+    if (!lista.length) {
+      var vacio = document.createElement('p');
+      vacio.className = 'media-rejilla__vacio';
+      vacio.textContent = tipo === 'video' ? 'Sin videos todavía.' : 'Sin fotos todavía.';
+      contenedor.appendChild(vacio);
     }
   }
 
-  function pintarPreviewVideo(src) {
-    var caja = $('previewVideo');
-    caja.innerHTML = '';
-    if (src) {
-      var video = document.createElement('video');
-      video.src = src;
-      video.muted = true;
-      video.playsInline = true;
-      video.controls = true;
-      caja.appendChild(video);
-      $('btnQuitarVideo').hidden = false;
-    } else {
-      var span = document.createElement('span');
-      span.className = 'media__vacio';
-      span.textContent = 'Sin video';
-      caja.appendChild(span);
-      $('btnQuitarVideo').hidden = true;
+  function pintarMedios() {
+    pintarRejilla($('rejillaFotos'), form.fotos, 'foto');
+    pintarRejilla($('rejillaVideos'), form.videos, 'video');
+  }
+
+  /** Añade los archivos elegidos a una lista, validando tipo y tamaño. */
+  function aceptarArchivos(clave, archivos) {
+    var esVideo = clave === 'videos';
+    var lista = form[clave];
+    var maximo = esVideo ? S.MAX_VIDEOS : S.MAX_FOTOS;
+    var espacio = maximo - lista.length;
+
+    if (espacio <= 0) {
+      toast('Ya tienes el máximo de ' + (esVideo ? 'videos' : 'fotos') + ' (' + maximo + ').', 'error');
+      return;
+    }
+
+    var agregados = 0;
+    var descartados = 0;
+
+    Array.prototype.forEach.call(archivos, function (archivo) {
+      if (agregados >= espacio) {
+        descartados++;
+        return;
+      }
+
+      var tipoValido = esVideo ? /^video\//.test(archivo.type) : /^image\//.test(archivo.type);
+      if (!tipoValido) {
+        toast(esVideo ? 'Solo se admiten videos MP4 o WebM.' : 'Solo se admiten fotos JPG, PNG o WebP.', 'error');
+        return;
+      }
+
+      var topeMb = esVideo ? 50 : 12;
+      if (archivo.size > topeMb * 1024 * 1024) {
+        toast('«' + archivo.name + '» pasa de ' + topeMb + ' MB.', 'error');
+        return;
+      }
+
+      lista.push({ url: '', archivo: archivo, preview: URL.createObjectURL(archivo) });
+      agregados++;
+    });
+
+    if (agregados) {
+      pintarMedios();
+      $('errorImagen').hidden = true;
+      toast(agregados === 1 ? 'Archivo listo para subir.' : agregados + ' archivos listos para subir.');
+    }
+
+    if (descartados) {
+      toast('Máximo ' + maximo + ' por producto; sobraron ' + descartados + '.', 'error');
     }
   }
 
-  function revocarPreviews() {
-    if (form.urlPreviewImagen) {
-      URL.revokeObjectURL(form.urlPreviewImagen);
-      form.urlPreviewImagen = '';
+  /** Reordena o quita un medio de la lista según el botón pulsado. */
+  function accionMedio(clave, indice, boton) {
+    var lista = form[clave];
+    var i = Number(indice);
+    if (!lista[i]) return;
+
+    if (boton.hasAttribute('data-quitar')) {
+      liberarMedio(lista[i]);
+      lista.splice(i, 1);
+    } else {
+      var paso = Number(boton.getAttribute('data-mover'));
+      var j = i + paso;
+      if (!(j >= 0 && j < lista.length)) return;
+      var cambio = lista[i];
+      lista[i] = lista[j];
+      lista[j] = cambio;
     }
-    if (form.urlPreviewVideo) {
-      URL.revokeObjectURL(form.urlPreviewVideo);
-      form.urlPreviewVideo = '';
-    }
+
+    pintarMedios();
+    if (clave === 'fotos') $('errorImagen').hidden = lista.length > 0;
+  }
+
+  function conectarRejilla(idRejilla, clave) {
+    var rejilla = $(idRejilla);
+    if (!rejilla) return;
+
+    rejilla.addEventListener('click', function (e) {
+      var boton = e.target.closest('button');
+      if (!boton) return;
+      var ficha = boton.closest('.media-ficha');
+      if (!ficha) return;
+      accionMedio(clave, ficha.getAttribute('data-indice'), boton);
+    });
   }
 
   /* ------------------------------- Formulario ------------------------------- */
@@ -407,75 +530,19 @@
 
     $('precio').addEventListener('input', actualizarPreviewPrecio);
 
-    $('archivoImagen').addEventListener('change', function (e) {
-      var archivo = e.target.files && e.target.files[0];
-      if (!archivo) return;
+    conectarRejilla('rejillaFotos', 'fotos');
+    conectarRejilla('rejillaVideos', 'videos');
 
-      if (!/^image\//.test(archivo.type)) {
-        toast('El archivo debe ser una imagen (JPG, PNG o WebP).', 'error');
-        e.target.value = '';
-        return;
-      }
-
-      if (archivo.size > 12 * 1024 * 1024) {
-        toast('La foto supera los 12 MB. Usa una imagen más ligera.', 'error');
-        e.target.value = '';
-        return;
-      }
-
-      form.archivoImagen = archivo;
-
-      if (form.urlPreviewImagen) URL.revokeObjectURL(form.urlPreviewImagen);
-      form.urlPreviewImagen = URL.createObjectURL(archivo);
-      pintarPreviewImagen(form.urlPreviewImagen);
-      $('errorImagen').hidden = true;
-      toast('Foto lista para subir.');
+    $('archivoFotos').addEventListener('change', function (e) {
+      var archivos = e.target.files;
+      if (archivos && archivos.length) aceptarArchivos('fotos', archivos);
+      e.target.value = '';
     });
 
-    $('btnQuitarImagen').addEventListener('click', function () {
-      if (form.urlPreviewImagen) {
-        URL.revokeObjectURL(form.urlPreviewImagen);
-        form.urlPreviewImagen = '';
-      }
-      form.archivoImagen = null;
-      form.urlImagen = '';
-      $('archivoImagen').value = '';
-      pintarPreviewImagen('');
-    });
-
-    $('archivoVideo').addEventListener('change', function (e) {
-      var archivo = e.target.files && e.target.files[0];
-      if (!archivo) return;
-
-      if (!/^video\//.test(archivo.type)) {
-        toast('El archivo debe ser un video (MP4 o WebM).', 'error');
-        e.target.value = '';
-        return;
-      }
-
-      if (archivo.size > 50 * 1024 * 1024) {
-        toast('El video supera los 50 MB. Usa un archivo más ligero.', 'error');
-        e.target.value = '';
-        return;
-      }
-
-      form.archivoVideo = archivo;
-
-      if (form.urlPreviewVideo) URL.revokeObjectURL(form.urlPreviewVideo);
-      form.urlPreviewVideo = URL.createObjectURL(archivo);
-      pintarPreviewVideo(form.urlPreviewVideo);
-      toast('Video listo para subir.');
-    });
-
-    $('btnQuitarVideo').addEventListener('click', function () {
-      if (form.urlPreviewVideo) {
-        URL.revokeObjectURL(form.urlPreviewVideo);
-        form.urlPreviewVideo = '';
-      }
-      form.archivoVideo = null;
-      form.urlVideo = '';
-      $('archivoVideo').value = '';
-      pintarPreviewVideo('');
+    $('archivoVideos').addEventListener('change', function (e) {
+      var archivos = e.target.files;
+      if (archivos && archivos.length) aceptarArchivos('videos', archivos);
+      e.target.value = '';
     });
 
     $('formProducto').addEventListener('submit', guardarFormulario);
@@ -518,7 +585,7 @@
     $('errorTallas').hidden = hayTalla;
     if (!hayTalla) ok = false;
 
-    var hayImagen = !!form.archivoImagen || !!form.urlImagen;
+    var hayImagen = form.fotos.length > 0;
     $('errorImagen').hidden = hayImagen;
     if (!hayImagen) ok = false;
 
@@ -558,27 +625,29 @@
     boton.textContent = 'Guardando…';
 
     var idEditando = form.id;
-    var imagenVieja = form.urlImagen;
-    var videoViejo = form.urlVideo;
-    var subidaImagen = null;
-    var subidaVideo = null;
+    var anteriores = form.anteriores.slice(); // lo que ya estaba guardado
+    var subidas = []; // lo que se subió en este intento
 
-    var prepararImagen = form.archivoImagen
-      ? S.subirArchivo(form.archivoImagen).then(function (r) {
-          subidaImagen = r.url;
-          return r.url;
+    /** Sube los medios pendientes de una lista y devuelve las URLs en orden. */
+    function prepararLista(lista, comprimir) {
+      return Promise.all(
+        lista.map(function (m) {
+          if (!m.archivo) return Promise.resolve(m.url);
+          return S.subirArchivo(m.archivo, { comprimir: comprimir }).then(function (r) {
+            subidas.push(r.url);
+            return r.url;
+          });
         })
-      : Promise.resolve(form.urlImagen);
+      ).then(function (urls) {
+        return urls.filter(function (u) { return !!u; });
+      });
+    }
 
-    var prepararVideo = form.archivoVideo
-      ? S.subirArchivo(form.archivoVideo, { comprimir: false }).then(function (r) {
-          subidaVideo = r.url;
-          return r.url;
-        })
-      : Promise.resolve(form.urlVideo);
+    Promise.all([prepararLista(form.fotos, true), prepararLista(form.videos, false)])
+      .then(function (listas) {
+        var fotos = listas[0];
+        var videos = listas[1];
 
-    Promise.all([prepararImagen, prepararVideo])
-      .then(function (urls) {
         var producto = {
           id: idEditando || '',
           nombre: $('nombre').value.trim(),
@@ -592,17 +661,19 @@
           activo: $('activo').checked,
           color: $('color').value.trim() || 'Negro',
           descripcion: $('descripcion').value.trim(),
-          imagen: urls[0] || '',
-          video: urls[1] || '',
+          imagenes: fotos,
+          videos: videos,
           sizes: S.tallasDe($('tipo').value).map(function (label) {
             return { label: label, disponible: !!form.tallas[label] };
           })
         };
 
         return S.guardarProducto(producto).then(function () {
-          // Si se reemplazó el archivo, se borra el anterior del almacenamiento
-          if (subidaImagen && imagenVieja && imagenVieja !== subidaImagen) S.borrarArchivo(imagenVieja);
-          if (subidaVideo && videoViejo && videoViejo !== subidaVideo) S.borrarArchivo(videoViejo);
+          // Del almacenamiento solo se borra lo que el producto ya no usa.
+          var enUso = fotos.concat(videos);
+          anteriores.forEach(function (url) {
+            if (url && enUso.indexOf(url) === -1) S.borrarArchivo(url);
+          });
         });
       })
       .then(function () {
@@ -617,9 +688,8 @@
       })
       .catch(function (err) {
         console.error('Error al guardar:', err);
-        // Si algo falló después de subir, no dejamos archivos huérfanos
-        if (subidaImagen) S.borrarArchivo(subidaImagen);
-        if (subidaVideo) S.borrarArchivo(subidaVideo);
+        // Si algo falló después de subir, no dejamos archivos huérfanos.
+        subidas.forEach(function (url) { S.borrarArchivo(url); });
         toast('No se pudo guardar: ' + mensajeError(err), 'error');
       })
       .finally(function () {
@@ -629,12 +699,12 @@
   }
 
   function limpiarFormulario() {
+    liberarLista(form.fotos);
+    liberarLista(form.videos);
     form.id = '';
-    form.urlImagen = '';
-    form.urlVideo = '';
-    form.archivoImagen = null;
-    form.archivoVideo = null;
-    revocarPreviews();
+    form.fotos = [];
+    form.videos = [];
+    form.anteriores = [];
 
     var formulario = $('formProducto');
     formulario.reset();
@@ -653,8 +723,7 @@
     $('activo').checked = true;
 
     construirTallas('camiseta', null);
-    pintarPreviewImagen('');
-    pintarPreviewVideo('');
+    pintarMedios();
     actualizarPreviewPrecio();
 
     $('nombre').removeAttribute('aria-invalid');
@@ -667,8 +736,8 @@
     $('formTitulo').textContent = 'Añadir producto';
     $('btnCancelar').hidden = true;
     $('btnGuardar').textContent = 'Guardar producto';
-    $('archivoImagen').value = '';
-    $('archivoVideo').value = '';
+    $('archivoFotos').value = '';
+    $('archivoVideos').value = '';
   }
 
   function editarProducto(id) {
@@ -681,8 +750,13 @@
     limpiarFormulario();
 
     form.id = p.id;
-    form.urlImagen = p.imagen || '';
-    form.urlVideo = p.video || '';
+    form.fotos = S.listaUrls(p.imagenes && p.imagenes.length ? p.imagenes : p.imagen)
+      .map(nuevoMedio);
+    form.videos = S.listaUrls(p.videos && p.videos.length ? p.videos : p.video)
+      .map(nuevoMedio);
+    form.anteriores = form.fotos.concat(form.videos)
+      .map(function (m) { return m.url; })
+      .filter(Boolean);
 
     $('productoId').value = p.id;
     $('nombre').value = p.nombre || '';
@@ -699,8 +773,7 @@
 
     construirTallas(p.tipo || 'camiseta', p.sizes || null);
 
-    if (p.imagen) pintarPreviewImagen(p.imagen);
-    if (p.video) pintarPreviewVideo(p.video);
+    pintarMedios();
 
     actualizarPreviewPrecio();
     $('formTitulo').textContent = 'Editar producto';
@@ -785,8 +858,10 @@
         S.eliminarProducto(id)
           .then(function () {
             if (producto) {
-              if (producto.imagen) S.borrarArchivo(producto.imagen);
-              if (producto.video) S.borrarArchivo(producto.video);
+              S.listaUrls(producto.imagenes && producto.imagenes.length ? producto.imagenes : producto.imagen)
+                .forEach(function (url) { S.borrarArchivo(url); });
+              S.listaUrls(producto.videos && producto.videos.length ? producto.videos : producto.video)
+                .forEach(function (url) { S.borrarArchivo(url); });
             }
             if (form.id === id) limpiarFormulario();
             toast('Producto eliminado definitivamente.', 'ok');

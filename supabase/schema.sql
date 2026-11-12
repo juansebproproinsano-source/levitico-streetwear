@@ -233,6 +233,9 @@ create table if not exists public.productos (
   descripcion      text not null default '' check (char_length(descripcion) <= 2000),
   imagen_url       text not null default '' check (imagen_url = '' or imagen_url ~* '^https://'),
   video_url        text not null default '' check (video_url = '' or video_url ~* '^https://'),
+  -- Galería: lista de URLs. La primera foto es la portada (se copia en imagen_url).
+  imagenes         jsonb not null default '[]'::jsonb check (jsonb_typeof(imagenes) = 'array'),
+  videos           jsonb not null default '[]'::jsonb check (jsonb_typeof(videos) = 'array'),
   tallas           jsonb not null default '[]'::jsonb,
   activo           boolean not null default true,
   orden            integer not null default 0,
@@ -243,6 +246,8 @@ create table if not exists public.productos (
 -- Columnas que pudieran faltar si la tabla ya existía de antes.
 alter table public.productos add column if not exists imagen_url text not null default '';
 alter table public.productos add column if not exists video_url  text not null default '';
+alter table public.productos add column if not exists imagenes   jsonb not null default '[]'::jsonb;
+alter table public.productos add column if not exists videos     jsonb not null default '[]'::jsonb;
 
 create index if not exists productos_activo_orden_idx
   on public.productos (activo, orden, creado_en desc);

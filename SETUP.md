@@ -91,7 +91,7 @@ python -m http.server 8123
 - Tienda: `http://localhost:8123/`
 - Panel: `http://localhost:8123/admin.html`
 
-Entra al panel con el correo y la contraseña del punto 3. Carga tu primer producto con foto, precio y tallas. Mientras el catálogo esté vacío, la tienda muestra el estado «Próximamente».
+Entra al panel con el correo y la contraseña del punto 3. Carga tu primer producto con fotos, precio y tallas. Mientras el catálogo esté vacío, la tienda muestra el estado «Próximamente».
 
 Si algo falla, el panel lo dice con un mensaje concreto: configuración incompleta, permisos sin ejecutar o archivo demasiado grande.
 
@@ -150,7 +150,7 @@ Qué tienes que saber:
 - Cada publicación queda anotada con la hora en `publicar.log`, junto con la URL del despliegue. Si algo falla, ese archivo dice qué pasó.
 - Necesita Vercel CLI instalado y la sesión iniciada (`npm i -g vercel` y `vercel login`, una sola vez).
 - Con `-Git` el cambio también queda respaldado en GitHub. Sin `-Git`, el sitio se publica pero el repositorio no se actualiza.
-- Un cambio de producto (precio, foto, tallas) **no** necesita publicar: se guarda en Supabase y aparece al instante en la tienda.
+- Un cambio de producto (precio, fotos, tallas) **no** necesita publicar: se guarda en Supabase y aparece al instante en la tienda.
 
 ### Netlify (alternativa)
 
@@ -180,10 +180,10 @@ El enlace a los términos aparece en el pie, en las notas del carrito y en la fi
 ## 8. Rutina del día a día
 
 - **Cambiar un texto o el diseño:** guarda el archivo con el vigilante abierto (`publicar.bat`) y sale publicado solo en unos segundos.
-- **Publicar una prenda:** panel → llenar formulario → subir foto → *Guardar producto*. Aparece de inmediato en la tienda.
+- **Publicar una prenda:** panel → llenar formulario → añadir fotos (hasta 6) y videos (hasta 2) → *Guardar producto*. Aparece de inmediato en la tienda.
 - **Marcar agotada una talla:** editar el producto y tocar el chip de la talla.
 - **Quitar del catálogo sin borrar:** botón *Ocultar*. El producto queda archivado y puedes volver a publicarlo.
-- **Eliminar de verdad:** botón *Eliminar* (pide confirmación en dos toques). También borra la foto del almacenamiento.
+- **Eliminar de verdad:** botón *Eliminar* (pide confirmación en dos toques). También borra del almacenamiento todas sus fotos y videos.
 - **Revisar pedidos:** sección **Pedidos recientes**. Es el respaldo escrito de cada pedido enviado por WhatsApp; la conversación y el pago se cierran en WhatsApp.
 
 ## Problemas frecuentes
@@ -200,8 +200,8 @@ El usuario existe pero su correo no está autorizado. Añádelo en la tabla `adm
 **«La base de datos todavía no tiene las tablas»**
 No se ejecutó `supabase/schema.sql`. Vuelve al paso 2 y ejecútalo completo.
 
-**La foto no sube**
-Debe ser JPG, PNG o WebP de menos de 50 MB (el video, MP4 o WebM, con el mismo tope). La compresión es automática; si falla, prueba con otra imagen.
+**Una foto o un video no sube**
+Las fotos deben ser JPG, PNG o WebP de hasta 12 MB (se comprimen solas antes de subir). Los videos, MP4 o WebM de hasta 50 MB. Si falla, prueba con un archivo más ligero.
 
 **El newsletter responde siempre lo mismo, aunque el correo ya estuviera apuntado**
 Es intencionado: la respuesta idéntica evita que alguien pueda averiguar qué direcciones están en la lista. Cada correo se guarda una sola vez.

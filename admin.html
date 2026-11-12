@@ -198,32 +198,25 @@
         </fieldset>
 
         <fieldset class="campo campo--media">
-          <legend class="campo__label">Foto del producto <span class="req">*</span></legend>
-          <p class="campo__pista">JPG, PNG o WebP. Se comprime automáticamente antes de subirla.</p>
+          <legend class="campo__label">Fotos del producto <span class="req">*</span></legend>
+          <p class="campo__pista">Hasta 6. La primera es la portada que sale en la tienda y en el carrito. JPG, PNG o WebP; se comprimen antes de subirlas.</p>
 
-          <div class="media" id="mediaImagen">
-            <div class="media__preview" id="previewImagen">
-              <span class="media__vacio">Sin foto</span>
-            </div>
-            <div class="media__controles">
-              <label class="boton boton--fantasma boton--sm" for="archivoImagen">Subir foto</label>
-              <input class="sr-only" id="archivoImagen" type="file" accept="image/*">
-              <button class="panel__link" type="button" id="btnQuitarImagen" hidden>Quitar foto</button>
-              <p class="campo__error" id="errorImagen" hidden>La foto es obligatoria.</p>
-            </div>
+          <div class="media-rejilla" id="rejillaFotos"></div>
+
+          <div class="media__controles">
+            <label class="boton boton--fantasma boton--sm" for="archivoFotos">Añadir fotos</label>
+            <input class="sr-only" id="archivoFotos" type="file" accept="image/*" multiple>
+            <p class="campo__error" id="errorImagen" hidden>Sube al menos una foto.</p>
           </div>
 
-          <p class="campo__label campo__label--sub">Video (opcional)</p>
-          <div class="media" id="mediaVideo">
-            <div class="media__preview media__preview--video" id="previewVideo">
-              <span class="media__vacio">Sin video</span>
-            </div>
-            <div class="media__controles">
-              <label class="boton boton--fantasma boton--sm" for="archivoVideo">Subir video</label>
-              <input class="sr-only" id="archivoVideo" type="file" accept="video/mp4,video/webm">
-              <button class="panel__link" type="button" id="btnQuitarVideo" hidden>Quitar video</button>
-              <p class="campo__pista">MP4 o WebM, máximo 50 MB.</p>
-            </div>
+          <p class="campo__label campo__label--sub">Videos (opcional)</p>
+          <p class="campo__pista">Hasta 2. MP4 o WebM, máximo 50 MB cada uno.</p>
+
+          <div class="media-rejilla media-rejilla--video" id="rejillaVideos"></div>
+
+          <div class="media__controles">
+            <label class="boton boton--fantasma boton--sm" for="archivoVideos">Añadir video</label>
+            <input class="sr-only" id="archivoVideos" type="file" accept="video/mp4,video/webm">
           </div>
         </fieldset>
 

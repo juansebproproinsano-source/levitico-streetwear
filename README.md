@@ -79,8 +79,8 @@ Ruta: `admin.html`. No está enlazado en la tienda ni indexado por los buscadore
 Funciones:
 
 - **Crear, editar, publicar, ocultar y eliminar** productos (camiseta, pantalón, chaqueta, sudadera, gorra, accesorio, otro).
-- **Foto obligatoria** con compresión automática antes de subirla al almacenamiento.
-- **Video opcional** (MP4/WebM, hasta 50 MB).
+- **Hasta 6 fotos por producto**, con compresión automática antes de subirlas. La primera es la portada que se ve en la tarjeta y en el carrito, y se puede reordenar con flechas.
+- **Hasta 2 videos por producto** (MP4/WebM, hasta 50 MB cada uno).
 - **Tallas por tipo de prenda**: XS–XXL en prendas, 28–36 en pantalones, única en gorras y accesorios. Cada talla se marca como disponible o agotada.
 - **Precio y precio anterior en COP**, estado (disponible / últimas unidades / agotado) y etiquetas (nuevo, edición limitada).
 - **Pedidos recientes** registrados desde el checkout por WhatsApp.
@@ -89,7 +89,7 @@ Funciones:
 
 - Menú desplegable **Tienda** con paneles por columnas en escritorio (Nuevo, Hombre, Mujer, Gorras, Accesorios) y acordeón en móvil; al elegir una categoría se filtra el catálogo.
 - Filtros por categoría, búsqueda en vivo y favoritos.
-- Ficha de producto con foto o video, selector de tallas —las agotadas aparecen tachadas y deshabilitadas— y validación al añadir al carrito.
+- Ficha de producto con galería de fotos y videos —miniaturas, flechas y teclado—, selector de tallas —las agotadas aparecen tachadas y deshabilitadas— y validación al añadir al carrito.
 - Carrito lateral con cantidades, subtotal y checkout por WhatsApp.
 - Precios con `Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' })`.
 - Si el catálogo está vacío, la tienda muestra un estado «Próximamente» en lugar de una rejilla vacía.
