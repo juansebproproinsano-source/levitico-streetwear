@@ -359,19 +359,36 @@
     (lista || []).forEach(liberarMedio);
   }
 
-  /** Dibuja una tira de fichas con sus controles (mover y quitar). */
+  /** Botón cuadrado de una ficha (mover, portada, quitar). */
+  function botonFicha(texto, etiqueta, atributo, valor) {
+    var boton = document.createElement('button');
+    boton.type = 'button';
+    boton.className = 'media-ficha__accion';
+    boton.textContent = texto;
+    boton.setAttribute('aria-label', etiqueta);
+    boton.title = etiqueta;
+    if (atributo) boton.setAttribute(atributo, valor === undefined ? '' : valor);
+    return boton;
+  }
+
+  /** Dibuja una tira de fichas; se reordenan arrastrando o con las flechas. */
   function pintarRejilla(contenedor, lista, tipo) {
     if (!contenedor) return;
     contenedor.innerHTML = '';
+
+    var esVideo = tipo === 'video';
+    var nombre = esVideo ? 'video' : 'foto';
 
     lista.forEach(function (m, i) {
       var src = m.preview || m.url;
       var ficha = document.createElement('figure');
       ficha.className = 'media-ficha';
       ficha.setAttribute('data-indice', String(i));
+      ficha.setAttribute('draggable', 'true');
+      ficha.title = 'Arrastra para cambiar el orden';
 
       var medio;
-      if (tipo === 'video') {
+      if (esVideo) {
         medio = document.createElement('video');
         medio.src = src;
         medio.muted = true;
@@ -383,43 +400,40 @@
         medio.alt = 'Foto ' + (i + 1) + ' del producto';
         medio.loading = 'lazy';
       }
+      medio.setAttribute('draggable', 'false');
       ficha.appendChild(medio);
 
       if (i === 0) {
         var portada = document.createElement('span');
         portada.className = 'media-ficha__portada';
-        portada.textContent = tipo === 'video' ? 'Principal' : 'Portada';
+        portada.textContent = esVideo ? 'Principal' : 'Portada';
         ficha.appendChild(portada);
       }
+
+      var quitar = botonFicha('✕', 'Quitar ' + nombre + ' ' + (i + 1), 'data-quitar');
+      quitar.classList.add('media-ficha__quitar');
+      ficha.appendChild(quitar);
 
       var acciones = document.createElement('div');
       acciones.className = 'media-ficha__acciones';
 
-      var izquierda = document.createElement('button');
-      izquierda.type = 'button';
-      izquierda.className = 'media-ficha__accion';
-      izquierda.setAttribute('data-mover', '-1');
-      izquierda.setAttribute('aria-label', 'Mover ' + (tipo === 'video' ? 'video' : 'foto') + ' ' + (i + 1) + ' a la izquierda');
-      izquierda.textContent = '←';
+      var izquierda = botonFicha('←', 'Mover ' + nombre + ' ' + (i + 1) + ' a la izquierda', 'data-mover', '-1');
       izquierda.disabled = i === 0;
       acciones.appendChild(izquierda);
 
-      var derecha = document.createElement('button');
-      derecha.type = 'button';
-      derecha.className = 'media-ficha__accion';
-      derecha.setAttribute('data-mover', '1');
-      derecha.setAttribute('aria-label', 'Mover ' + (tipo === 'video' ? 'video' : 'foto') + ' ' + (i + 1) + ' a la derecha');
-      derecha.textContent = '→';
+      var portadaBtn = botonFicha(
+        '★',
+        esVideo ? 'Usar como video principal' : 'Usar como portada',
+        'data-portada'
+      );
+      portadaBtn.classList.add('media-ficha__accion--portada');
+      portadaBtn.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
+      portadaBtn.disabled = i === 0;
+      acciones.appendChild(portadaBtn);
+
+      var derecha = botonFicha('→', 'Mover ' + nombre + ' ' + (i + 1) + ' a la derecha', 'data-mover', '1');
       derecha.disabled = i === lista.length - 1;
       acciones.appendChild(derecha);
-
-      var quitar = document.createElement('button');
-      quitar.type = 'button';
-      quitar.className = 'media-ficha__accion media-ficha__accion--quitar';
-      quitar.setAttribute('data-quitar', '');
-      quitar.setAttribute('aria-label', 'Quitar ' + (tipo === 'video' ? 'video' : 'foto') + ' ' + (i + 1));
-      quitar.textContent = '✕';
-      acciones.appendChild(quitar);
 
       ficha.appendChild(acciones);
       contenedor.appendChild(ficha);
@@ -428,7 +442,7 @@
     if (!lista.length) {
       var vacio = document.createElement('p');
       vacio.className = 'media-rejilla__vacio';
-      vacio.textContent = tipo === 'video' ? 'Sin videos todavía.' : 'Sin fotos todavía.';
+      vacio.textContent = esVideo ? 'Sin videos todavía.' : 'Sin fotos todavía.';
       contenedor.appendChild(vacio);
     }
   }
@@ -486,7 +500,19 @@
     }
   }
 
-  /** Reordena o quita un medio de la lista según el botón pulsado. */
+  /** Lleva un medio de una posición a otra: arrastrar, flechas o «portada». */
+  function moverMedio(clave, desde, hasta) {
+    var lista = form[clave];
+    var d = Number(desde);
+    var h = Number(hasta);
+    if (!lista[d] || !(h >= 0 && h < lista.length) || d === h) return false;
+    var medio = lista.splice(d, 1)[0];
+    lista.splice(h, 0, medio);
+    pintarMedios();
+    return true;
+  }
+
+  /** Mueve, marca portada o quita un medio de la lista según el botón pulsado. */
   function accionMedio(clave, indice, boton) {
     var lista = form[clave];
     var i = Number(indice);
@@ -495,29 +521,83 @@
     if (boton.hasAttribute('data-quitar')) {
       liberarMedio(lista[i]);
       lista.splice(i, 1);
-    } else {
-      var paso = Number(boton.getAttribute('data-mover'));
-      var j = i + paso;
-      if (!(j >= 0 && j < lista.length)) return;
-      var cambio = lista[i];
-      lista[i] = lista[j];
-      lista[j] = cambio;
+      pintarMedios();
+      if (clave === 'fotos') $('errorImagen').hidden = lista.length > 0;
+      return;
     }
 
-    pintarMedios();
-    if (clave === 'fotos') $('errorImagen').hidden = lista.length > 0;
+    if (boton.hasAttribute('data-portada')) {
+      moverMedio(clave, i, 0);
+      return;
+    }
+
+    moverMedio(clave, i, i + Number(boton.getAttribute('data-mover')));
   }
 
   function conectarRejilla(idRejilla, clave) {
     var rejilla = $(idRejilla);
     if (!rejilla) return;
 
+    var arrastrado = null;
+
+    function limpiarMarca() {
+      Array.prototype.forEach.call(rejilla.children, function (hijo) {
+        hijo.classList.remove('is-arrastrando', 'is-destino');
+      });
+    }
+
     rejilla.addEventListener('click', function (e) {
       var boton = e.target.closest('button');
-      if (!boton) return;
+      if (!boton || boton.disabled) return;
       var ficha = boton.closest('.media-ficha');
       if (!ficha) return;
       accionMedio(clave, ficha.getAttribute('data-indice'), boton);
+    });
+
+    rejilla.addEventListener('dragstart', function (e) {
+      var ficha = e.target.closest('.media-ficha');
+      if (!ficha) return;
+      arrastrado = Number(ficha.getAttribute('data-indice'));
+      ficha.classList.add('is-arrastrando');
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(arrastrado));
+      }
+    });
+
+    rejilla.addEventListener('dragover', function (e) {
+      if (arrastrado === null) return;
+      var ficha = e.target.closest('.media-ficha');
+      if (!ficha) return;
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+      var destino = Number(ficha.getAttribute('data-indice'));
+      Array.prototype.forEach.call(rejilla.children, function (hijo) {
+        hijo.classList.toggle(
+          'is-destino',
+          hijo === ficha && Number(hijo.getAttribute('data-indice')) !== arrastrado && destino >= 0
+        );
+      });
+    });
+
+    rejilla.addEventListener('dragleave', function (e) {
+      var ficha = e.target.closest('.media-ficha');
+      if (ficha) ficha.classList.remove('is-destino');
+    });
+
+    rejilla.addEventListener('drop', function (e) {
+      var ficha = e.target.closest('.media-ficha');
+      if (!ficha || arrastrado === null) return;
+      e.preventDefault();
+      var desde = arrastrado;
+      arrastrado = null;
+      limpiarMarca();
+      moverMedio(clave, desde, Number(ficha.getAttribute('data-indice')));
+    });
+
+    rejilla.addEventListener('dragend', function () {
+      arrastrado = null;
+      limpiarMarca();
     });
   }
 

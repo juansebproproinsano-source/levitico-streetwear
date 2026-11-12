@@ -79,7 +79,7 @@ Ruta: `admin.html`. No está enlazado en la tienda ni indexado por los buscadore
 Funciones:
 
 - **Crear, editar, publicar, ocultar y eliminar** productos (camiseta, pantalón, chaqueta, sudadera, gorra, accesorio, otro).
-- **Hasta 6 fotos por producto**, con compresión automática antes de subirlas. La primera es la portada que se ve en la tarjeta y en el carrito, y se puede reordenar con flechas.
+- **Hasta 6 fotos por producto**, con compresión automática antes de subirlas. Se ordenan arrastrando la ficha o con las flechas, y el botón ★ pone cualquiera como portada; la primera es la que se ve en la tarjeta y en el carrito.
 - **Hasta 2 videos por producto** (MP4/WebM, hasta 50 MB cada uno).
 - **Tallas por tipo de prenda**: XS–XXL en prendas, 28–36 en pantalones, única en gorras y accesorios. Cada talla se marca como disponible o agotada.
 - **Precio y precio anterior en COP**, estado (disponible / últimas unidades / agotado) y etiquetas (nuevo, edición limitada).

@@ -181,6 +181,7 @@ El enlace a los términos aparece en el pie, en las notas del carrito y en la fi
 
 - **Cambiar un texto o el diseño:** guarda el archivo con el vigilante abierto (`publicar.bat`) y sale publicado solo en unos segundos.
 - **Publicar una prenda:** panel → llenar formulario → añadir fotos (hasta 6) y videos (hasta 2) → *Guardar producto*. Aparece de inmediato en la tienda.
+- **Ordenar las fotos:** arrastra una ficha sobre otra o usa las flechas ← →. El botón ★ sube cualquier foto a portada; la primera es la que se ve en la tarjeta, el carrito y la ficha.
 - **Marcar agotada una talla:** editar el producto y tocar el chip de la talla.
 - **Quitar del catálogo sin borrar:** botón *Ocultar*. El producto queda archivado y puedes volver a publicarlo.
 - **Eliminar de verdad:** botón *Eliminar* (pide confirmación en dos toques). También borra del almacenamiento todas sus fotos y videos.
