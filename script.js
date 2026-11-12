@@ -348,6 +348,23 @@
     return html;
   }
 
+  /* ------------------------------- Encuadre --------------------------------- */
+
+  /** Encuadre → "x,y,z" para llevarlo en un atributo data-enc. */
+  function encCrudo(enc) {
+    var e = S.encuadreValido(enc) || S.ENCUADRE_BASE;
+    return e.x + ',' + e.y + ',' + e.z;
+  }
+
+  /** Aplica el encuadre guardado a todas las imágenes con data-enc de la raíz. */
+  function aplicarEncuadres(raiz) {
+    if (!raiz) return;
+    Array.prototype.forEach.call(raiz.querySelectorAll('[data-enc]'), function (el) {
+      var partes = String(el.getAttribute('data-enc')).split(',');
+      S.aplicarEncuadre(el, { x: partes[0], y: partes[1], z: partes[2] });
+    });
+  }
+
   function tarjeta(p) {
     var url = p.imagen || PLACEHOLDER;
     var fav = estado.favoritos.indexOf(p.id) !== -1;
@@ -357,7 +374,7 @@
     return '' +
       '<article class="card' + (agotado ? ' card--agotado' : '') + '" data-id="' + esc(p.id) + '">' +
         '<div class="card__media">' +
-          '<img class="card__img" src="' + esc(url) + '" alt="' + esc(p.nombre) + '" loading="lazy" width="900" height="1200">' +
+          '<img class="card__img" src="' + esc(url) + '" alt="' + esc(p.nombre) + '" loading="lazy" width="900" height="1200" data-enc="' + encCrudo(S.encuadreEn(p, 0)) + '">' +
           '<div class="card__badges">' + badges(p) + '</div>' +
           '<button class="card__fav' + (fav ? ' is-fav' : '') + '" data-fav="' + esc(p.id) + '" aria-pressed="' + (fav ? 'true' : 'false') + '" aria-label="' + (fav ? 'Quitar de favoritos' : 'Añadir a favoritos') + ': ' + esc(p.nombre) + '">' +
             '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-9.4A4.1 4.1 0 0 1 12 7.6a4.1 4.1 0 0 1 7.5 3C19.5 15.4 12 20 12 20z" fill="' + (fav ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>' +
@@ -474,6 +491,7 @@
       !!estado.tipo || estado.soloFavoritos;
 
     grid.innerHTML = lista.map(tarjeta).join('');
+    aplicarEncuadres(grid);
     grid.hidden = lista.length === 0;
     if (filtros) filtros.hidden = total === 0;
 
@@ -622,6 +640,7 @@
       modalVideo.hidden = true;
       modalImagen.hidden = false;
       modalImagen.src = m.url || PLACEHOLDER;
+      S.aplicarEncuadre(modalImagen, m.enc);
     }
 
     Array.prototype.forEach.call(modalTira.children, function (boton, i) {
@@ -670,6 +689,7 @@
         miniatura.src = m.url;
         miniatura.alt = '';
         miniatura.loading = 'lazy';
+        S.aplicarEncuadre(miniatura, m.enc);
         boton.appendChild(miniatura);
       }
 
@@ -681,8 +701,10 @@
   /** Arma la lista de medios del producto (con respaldo a la portada vieja). */
   function mediosDeProducto(p) {
     var lista = [];
-    S.listaUrls(p.imagenes && p.imagenes.length ? p.imagenes : p.imagen)
-      .forEach(function (url) { lista.push({ tipo: 'foto', url: url }); });
+    var fotos = S.listaUrls(p.imagenes && p.imagenes.length ? p.imagenes : p.imagen);
+    fotos.forEach(function (url, i) {
+      lista.push({ tipo: 'foto', url: url, enc: S.encuadreEn(p, i) });
+    });
     S.listaUrls(p.videos && p.videos.length ? p.videos : p.video)
       .forEach(function (url) { lista.push({ tipo: 'video', url: url }); });
     if (!lista.length) lista.push({ tipo: 'foto', url: '' });
@@ -872,6 +894,7 @@
         nombre: p.nombre,
         precio: Number(p.precio) || 0,
         imagen: p.imagen,
+        enc: encCrudo(S.encuadreEn(p, 0)),
         tipo: p.tipo,
         cantidad: unidades
       });
@@ -903,7 +926,7 @@
       var img = i.imagen || PLACEHOLDER;
       return '' +
         '<div class="item" data-clave="' + esc(i.clave) + '">' +
-          '<img class="item__img" src="' + esc(img) + '" alt="' + esc(i.nombre) + '" width="66" height="88">' +
+          '<img class="item__img" src="' + esc(img) + '" alt="' + esc(i.nombre) + '" width="66" height="88" data-enc="' + esc(i.enc || '50,50,1') + '">' +
           '<div class="item__info">' +
             '<p class="item__nombre">' + esc(i.nombre) + '</p>' +
             '<p class="item__meta">Talla ' + esc(i.talla) + '</p>' +
@@ -920,6 +943,7 @@
         '</div>';
     }).join('');
 
+    aplicarEncuadres(carritoItems);
     carritoTotal.textContent = S.precioCOP(totalCarrito());
     sincronizarAcepto();
   }

@@ -914,7 +914,17 @@ body::after {
   object-fit: cover;
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.card:hover .card__img { transform: scale(1.05); }
+
+/* Encuadre por foto: el panel guarda un punto de enfoque y un acercamiento.
+   Se aplican con variables CSS para que el recorte sea el mismo en la
+   tarjeta, la ficha, las miniaturas y el carrito. */
+.img-encuadre {
+  object-position: var(--enc-x, 50%) var(--enc-y, 50%);
+  transform-origin: var(--enc-x, 50%) var(--enc-y, 50%);
+  transform: scale(var(--enc-z, 1));
+}
+
+.card:hover .card__img { transform: scale(calc(var(--enc-z, 1) * 1.05)); }
 
 .card__badges {
   position: absolute;
@@ -1796,6 +1806,9 @@ body::after {
   border-radius: 3px;
   background: #0f0f0f;
 }
+/* La miniatura del carrito solo respeta el punto de enfoque: sin zoom,
+   para que no se salga de su celda. */
+.item__img.img-encuadre { transform: none; }
 .item__info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .item__nombre {
   font-size: 13.5px;

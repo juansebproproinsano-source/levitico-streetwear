@@ -199,7 +199,7 @@
 
         <fieldset class="campo campo--media">
           <legend class="campo__label">Fotos del producto <span class="req">*</span></legend>
-          <p class="campo__pista">Hasta 6. Arrastra las fotos para ordenarlas o usa las flechas; con ★ pones cualquiera como portada. La primera es la que sale en la tienda y en el carrito. JPG, PNG o WebP; se comprimen antes de subirlas.</p>
+          <p class="campo__pista">Hasta 6. Arrastra las fotos para ordenarlas o usa las flechas; con ★ pones cualquiera como portada y con ⛶ ajustas qué parte se ve. La primera es la que sale en la tienda y en el carrito. JPG, PNG o WebP; se comprimen antes de subirlas.</p>
 
           <div class="media-rejilla" id="rejillaFotos"></div>
 
@@ -208,6 +208,42 @@
             <input class="sr-only" id="archivoFotos" type="file" accept="image/*" multiple>
             <p class="campo__error" id="errorImagen" hidden>Sube al menos una foto.</p>
           </div>
+
+          <section class="encuadre" id="encuadreEditor" aria-labelledby="encuadreTitulo" hidden>
+            <div class="encuadre__cabecera">
+              <h3 class="encuadre__titulo" id="encuadreTitulo">Encuadrar foto <span id="encuadreNumero"></span></h3>
+              <button class="encuadre__cerrar" id="btnCerrarEncuadre" type="button" aria-label="Cerrar el encuadre">✕</button>
+            </div>
+
+            <p class="campo__pista">Arrastra sobre la vista de la izquierda para mover la foto y usa el control para acercarla. Así se verá en la tienda.</p>
+
+            <div class="encuadre__vistas">
+              <figure class="encuadre__vista">
+                <div class="encuadre__marco encuadre__marco--tarjeta" id="encuadreMarcoTarjeta">
+                  <img id="encuadreTarjeta" alt="Vista previa de la tarjeta en la tienda">
+                </div>
+                <figcaption>Tarjeta · 3:4</figcaption>
+              </figure>
+              <figure class="encuadre__vista">
+                <div class="encuadre__marco encuadre__marco--ficha">
+                  <img id="encuadreFicha" alt="Vista previa de la ficha del producto">
+                </div>
+                <figcaption>Ficha · 4:3</figcaption>
+              </figure>
+            </div>
+
+            <div class="encuadre__zoom">
+              <label class="campo__label" for="encuadreZoom">Acercar</label>
+              <input id="encuadreZoom" type="range" min="1" max="2.5" step="0.01" value="1">
+              <output id="encuadreZoomValor" for="encuadreZoom">1×</output>
+            </div>
+
+            <div class="encuadre__acciones">
+              <button class="boton boton--fantasma boton--sm" id="encuadreCentrar" type="button">Centrar</button>
+              <button class="boton boton--fantasma boton--sm" id="btnCancelarEncuadre" type="button">Cancelar</button>
+              <button class="boton boton--amarillo boton--sm" id="encuadreListo" type="button">Listo</button>
+            </div>
+          </section>
 
           <p class="campo__label campo__label--sub">Videos (opcional)</p>
           <p class="campo__pista">Hasta 2. El primero es el principal. MP4 o WebM, máximo 50 MB cada uno. También puedes arrastrarlos para cambiar el orden.</p>

@@ -184,6 +184,60 @@
     return salida;
   }
 
+  /* ------------------------------- Encuadres -------------------------------- */
+
+  /* Punto de enfoque (x, y en % del recuadro) y acercamiento (z, 1 = entero).
+     Se guardan por foto y los respeta la tienda al recortar. */
+  var ENCUADRE_BASE = { x: 50, y: 50, z: 1 };
+  var ZOOM_MAXIMO = 2.5;
+
+  /** Normaliza un encuadre suelto; devuelve null si no hay nada que usar. */
+  function encuadreValido(valor) {
+    if (!valor || typeof valor !== 'object') return null;
+
+    var x = Number(valor.x);
+    var y = Number(valor.y);
+    var z = Number(valor.z);
+    if (!isFinite(x) && !isFinite(y) && !isFinite(z)) return null;
+
+    return {
+      x: Math.min(100, Math.max(0, isFinite(x) ? x : 50)),
+      y: Math.min(100, Math.max(0, isFinite(y) ? y : 50)),
+      z: Math.min(ZOOM_MAXIMO, Math.max(1, isFinite(z) ? z : 1))
+    };
+  }
+
+  /** Lista de encuadres alineada con las fotos; rellena con el centro. */
+  function listaEncuadres(lista, cuantos) {
+    var bruto = Array.isArray(lista) ? lista : [];
+    var total = Number(cuantos) || 0;
+    var salida = [];
+
+    for (var i = 0; i < total; i++) {
+      salida.push(encuadreValido(bruto[i]) || { x: 50, y: 50, z: 1 });
+    }
+    return salida;
+  }
+
+  /** Encuadre de una foto concreta ya guardada, o el centro si no tiene. */
+  function encuadreEn(producto, indice) {
+    var lista = producto && Array.isArray(producto.encuadres) ? producto.encuadres : [];
+    return encuadreValido(lista[indice]) || { x: 50, y: 50, z: 1 };
+  }
+
+  /**
+   * Aplica un encuadre a una imagen mediante variables CSS.
+   * Se usa CSSOM (no el atributo style) para no chocar con la CSP.
+   */
+  function aplicarEncuadre(el, enc) {
+    if (!el || !el.style) return;
+    var e = encuadreValido(enc) || ENCUADRE_BASE;
+    el.classList.add('img-encuadre');
+    el.style.setProperty('--enc-x', e.x + '%');
+    el.style.setProperty('--enc-y', e.y + '%');
+    el.style.setProperty('--enc-z', String(e.z));
+  }
+
   /* ---------------------------- Cliente Supabase ---------------------------- */
 
   var clienteCache = null;
@@ -241,6 +295,7 @@
       color: f.color || '',
       descripcion: f.descripcion || '',
       imagenes: imagenes,
+      encuadres: listaEncuadres(f.encuadres, imagenes.length),
       videos: videos,
       imagen: imagenes[0] || '',
       video: videos[0] || '',
@@ -260,6 +315,8 @@
     if (!videos.length) videos = listaUrls(p.video);
     videos = videos.slice(0, MAX_VIDEOS);
 
+    var encuadres = listaEncuadres(p.encuadres, fotos.length);
+
     return {
       nombre: limpiar(p.nombre, 120),
       tipo: p.tipo || 'camiseta',
@@ -276,6 +333,7 @@
       imagen_url: fotos[0] || '',
       video_url: videos[0] || '',
       imagenes: fotos,
+      encuadres: encuadres,
       videos: videos,
       tallas: (Array.isArray(p.sizes) ? p.sizes : [])
         .map(function (t) {
@@ -722,6 +780,12 @@
     limpiar: limpiar,
     urlSegura: urlSegura,
     listaUrls: listaUrls,
+    ENCUADRE_BASE: ENCUADRE_BASE,
+    ZOOM_MAXIMO: ZOOM_MAXIMO,
+    encuadreValido: encuadreValido,
+    listaEncuadres: listaEncuadres,
+    encuadreEn: encuadreEn,
+    aplicarEncuadre: aplicarEncuadre,
     MIMES_PERMITIDOS: MIMES_PERMITIDOS,
     TAMANO_MAXIMO: TAMANO_MAXIMO,
     MAX_FOTOS: MAX_FOTOS,

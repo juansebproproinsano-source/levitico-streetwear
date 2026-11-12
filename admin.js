@@ -346,9 +346,14 @@
 
   /* --------------------------------- Media ---------------------------------- */
 
-  /** Un medio del formulario: ya guardado (url), recién elegido (archivo) o ambos. */
-  function nuevoMedio(url) {
-    return { url: url || '', archivo: null, preview: '' };
+  /** Encuadre por defecto: la foto entera, centrada. */
+  function nuevoMedio(url, enc) {
+    return {
+      url: url || '',
+      archivo: null,
+      preview: '',
+      enc: S.encuadreValido(enc) || { x: 50, y: 50, z: 1 }
+    };
   }
 
   function liberarMedio(m) {
@@ -399,6 +404,7 @@
         medio.src = src;
         medio.alt = 'Foto ' + (i + 1) + ' del producto';
         medio.loading = 'lazy';
+        S.aplicarEncuadre(medio, m.enc);
       }
       medio.setAttribute('draggable', 'false');
       ficha.appendChild(medio);
@@ -408,6 +414,12 @@
         portada.className = 'media-ficha__portada';
         portada.textContent = esVideo ? 'Principal' : 'Portada';
         ficha.appendChild(portada);
+      }
+
+      if (!esVideo) {
+        var encuadrar = botonFicha('⛶', 'Ajustar el encuadre de la foto ' + (i + 1), 'data-encuadrar');
+        encuadrar.classList.add('media-ficha__encuadrar');
+        ficha.appendChild(encuadrar);
       }
 
       var quitar = botonFicha('✕', 'Quitar ' + nombre + ' ' + (i + 1), 'data-quitar');
@@ -431,6 +443,8 @@
       portadaBtn.disabled = i === 0;
       acciones.appendChild(portadaBtn);
 
+      if (!esVideo) acciones.appendChild(encuadrar);
+
       var derecha = botonFicha('→', 'Mover ' + nombre + ' ' + (i + 1) + ' a la derecha', 'data-mover', '1');
       derecha.disabled = i === lista.length - 1;
       acciones.appendChild(derecha);
@@ -447,9 +461,142 @@
     }
   }
 
+  /* ---------------------------- Editor de encuadre --------------------------- */
+
+  // Foto que se está encuadrando y copia para poder cancelar.
+  var encEditor = { medio: null, original: null };
+
   function pintarMedios() {
     pintarRejilla($('rejillaFotos'), form.fotos, 'foto');
     pintarRejilla($('rejillaVideos'), form.videos, 'video');
+
+    // Si la foto en edición ya no está en la lista, el editor se cierra.
+    if (encEditor.medio && form.fotos.indexOf(encEditor.medio) === -1) {
+      encEditor.medio = null;
+      encEditor.original = null;
+      $('encuadreEditor').hidden = true;
+    }
+  }
+
+  function acotar(valor, minimo, maximo) {
+    return Math.min(maximo, Math.max(minimo, valor));
+  }
+
+  /** Copia del encuadre para no tocar el original mientras se arrastra. */
+  function copiaEncuadre(enc) {
+    return { x: enc.x, y: enc.y, z: enc.z };
+  }
+
+  /** Refleja el encuadre en las dos vistas, el control y la miniatura. */
+  function pintarEncuadre() {
+    var m = encEditor.medio;
+    if (!m) return;
+
+    S.aplicarEncuadre($('encuadreTarjeta'), m.enc);
+    S.aplicarEncuadre($('encuadreFicha'), m.enc);
+
+    var control = $('encuadreZoom');
+    if (Number(control.value) !== m.enc.z) control.value = String(m.enc.z);
+    // Redondeo a dos decimales y sin ceros de sobra: 1 -> «1×», 1.35 -> «1,35×».
+    var factor = String(Math.round(m.enc.z * 100) / 100).replace('.', ',');
+    $('encuadreZoomValor').textContent = factor + '×';
+
+    var i = form.fotos.indexOf(m);
+    var ficha = i === -1 ? null : $('rejillaFotos').children[i];
+    var miniatura = ficha ? ficha.querySelector('img') : null;
+    if (miniatura) S.aplicarEncuadre(miniatura, m.enc);
+  }
+
+  function abrirEncuadre(indice) {
+    var m = form.fotos[Number(indice)];
+    if (!m) return;
+
+    encEditor.medio = m;
+    encEditor.original = copiaEncuadre(m.enc);
+
+    var src = m.preview || m.url;
+    $('encuadreTarjeta').src = src;
+    $('encuadreFicha').src = src;
+    $('encuadreNumero').textContent = 'N.º ' + (Number(indice) + 1);
+    $('encuadreEditor').hidden = false;
+    pintarEncuadre();
+    $('encuadreEditor').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  /** Cierra el editor; con restaurar = true devuelve el encuadre de antes. */
+  function cerrarEncuadre(restaurar) {
+    var m = encEditor.medio;
+    if (!m) return;
+
+    if (restaurar && encEditor.original) m.enc = encEditor.original;
+
+    encEditor.medio = null;
+    encEditor.original = null;
+    $('encuadreEditor').hidden = true;
+    pintarMedios();
+  }
+
+  function conectarEncuadre() {
+    var marco = $('encuadreMarcoTarjeta');
+    if (!marco) return;
+
+    var arrastre = null;
+
+    marco.addEventListener('pointerdown', function (e) {
+      if (!encEditor.medio || e.button !== 0) return;
+      arrastre = {
+        x: e.clientX,
+        y: e.clientY,
+        ancho: marco.clientWidth || 1,
+        alto: marco.clientHeight || 1
+      };
+      marco.classList.add('is-moviendo');
+      if (marco.setPointerCapture) marco.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+
+    marco.addEventListener('pointermove', function (e) {
+      if (!arrastre || !encEditor.medio) return;
+      var enc = encEditor.medio.enc;
+      var dx = (e.clientX - arrastre.x) / arrastre.ancho * 100;
+      var dy = (e.clientY - arrastre.y) / arrastre.alto * 100;
+
+      // Se mueve la foto: el punto de enfoque va al lado contrario.
+      enc.x = acotar(enc.x - dx / enc.z, 0, 100);
+      enc.y = acotar(enc.y - dy / enc.z, 0, 100);
+
+      arrastre.x = e.clientX;
+      arrastre.y = e.clientY;
+      pintarEncuadre();
+    });
+
+    function soltar(e) {
+      if (!arrastre) return;
+      arrastre = null;
+      marco.classList.remove('is-moviendo');
+      if (marco.hasPointerCapture && marco.hasPointerCapture(e.pointerId)) {
+        marco.releasePointerCapture(e.pointerId);
+      }
+    }
+
+    marco.addEventListener('pointerup', soltar);
+    marco.addEventListener('pointercancel', soltar);
+
+    $('encuadreZoom').addEventListener('input', function (e) {
+      if (!encEditor.medio) return;
+      encEditor.medio.enc.z = acotar(Number(e.target.value) || 1, 1, S.ZOOM_MAXIMO);
+      pintarEncuadre();
+    });
+
+    $('encuadreCentrar').addEventListener('click', function () {
+      if (!encEditor.medio) return;
+      encEditor.medio.enc = { x: 50, y: 50, z: 1 };
+      pintarEncuadre();
+    });
+
+    $('btnCancelarEncuadre').addEventListener('click', function () { cerrarEncuadre(true); });
+    $('btnCerrarEncuadre').addEventListener('click', function () { cerrarEncuadre(true); });
+    $('encuadreListo').addEventListener('click', function () { cerrarEncuadre(false); });
   }
 
   /** Añade los archivos elegidos a una lista, validando tipo y tamaño. */
@@ -485,7 +632,12 @@
         return;
       }
 
-      lista.push({ url: '', archivo: archivo, preview: URL.createObjectURL(archivo) });
+      lista.push({
+        url: '',
+        archivo: archivo,
+        preview: URL.createObjectURL(archivo),
+        enc: { x: 50, y: 50, z: 1 }
+      });
       agregados++;
     });
 
@@ -551,6 +703,12 @@
       if (!boton || boton.disabled) return;
       var ficha = boton.closest('.media-ficha');
       if (!ficha) return;
+
+      if (boton.hasAttribute('data-encuadrar')) {
+        abrirEncuadre(ficha.getAttribute('data-indice'));
+        return;
+      }
+
       accionMedio(clave, ficha.getAttribute('data-indice'), boton);
     });
 
@@ -625,6 +783,8 @@
       e.target.value = '';
     });
 
+    conectarEncuadre();
+
     $('formProducto').addEventListener('submit', guardarFormulario);
     $('btnLimpiar').addEventListener('click', function () {
       limpiarFormulario();
@@ -685,7 +845,7 @@
       return 'La base de datos todavía no tiene las tablas. Ejecuta supabase/schema.sql en el SQL Editor de Supabase.';
     }
     if (codigo === 'PGRST204' || /could not find the .{0,40}column/i.test(texto)) {
-      return 'A la base de datos le faltan las columnas de la galería (imagenes y videos). No se guardó nada para no perder las fotos extra. Abre el SQL Editor de Supabase, pega el archivo supabase/actualizar-galeria.sql y pulsa «Run»; después vuelve a guardar.';
+      return 'A la base de datos le faltan las columnas de la galería (imagenes, videos y encuadres). No se guardó nada para no perder las fotos extra. Abre el SQL Editor de Supabase, pega el archivo supabase/actualizar-galeria.sql y pulsa «Run»; después vuelve a guardar.';
     }
     if (/row-level security|permission denied|new row violates/i.test(texto)) {
       return 'La base de datos rechazó el cambio porque este correo no está en la lista de administradores. Añádelo en la tabla "administradores" de Supabase.';
@@ -711,25 +871,36 @@
     var anteriores = form.anteriores.slice(); // lo que ya estaba guardado
     var subidas = []; // lo que se subió en este intento
 
-    /** Sube los medios pendientes de una lista y devuelve las URLs en orden. */
+    /** Sube los medios pendientes y devuelve, en orden, URL y encuadre. */
     function prepararLista(lista, comprimir) {
       return Promise.all(
         lista.map(function (m) {
-          if (!m.archivo) return Promise.resolve(m.url);
-          return S.subirArchivo(m.archivo, { comprimir: comprimir }).then(function (r) {
-            subidas.push(r.url);
-            return r.url;
+          var enc = S.encuadreValido(m.enc) || S.ENCUADRE_BASE;
+          var pendiente = m.archivo
+            ? S.subirArchivo(m.archivo, { comprimir: comprimir }).then(function (r) {
+                subidas.push(r.url);
+                return r.url;
+              })
+            : Promise.resolve(m.url);
+
+          return pendiente.then(function (url) {
+            return { url: url || '', enc: enc };
           });
         })
-      ).then(function (urls) {
-        return urls.filter(function (u) { return !!u; });
+      ).then(function (pares) {
+        return pares.filter(function (par) { return !!par.url; });
       });
     }
 
     Promise.all([prepararLista(form.fotos, true), prepararLista(form.videos, false)])
       .then(function (listas) {
-        var fotos = listas[0];
-        var videos = listas[1];
+        var paresFotos = listas[0];
+        var fotos = paresFotos.map(function (par) { return par.url; });
+        var encuadres = S.listaEncuadres(
+          paresFotos.map(function (par) { return par.enc; }),
+          fotos.length
+        );
+        var videos = listas[1].map(function (par) { return par.url; });
 
         var producto = {
           id: idEditando || '',
@@ -745,6 +916,7 @@
           color: $('color').value.trim() || 'Negro',
           descripcion: $('descripcion').value.trim(),
           imagenes: fotos,
+          encuadres: encuadres,
           videos: videos,
           sizes: S.tallasDe($('tipo').value).map(function (label) {
             return { label: label, disponible: !!form.tallas[label] };
@@ -782,6 +954,12 @@
   }
 
   function limpiarFormulario() {
+    if (encEditor.medio) {
+      encEditor.medio = null;
+      encEditor.original = null;
+      $('encuadreEditor').hidden = true;
+    }
+
     liberarLista(form.fotos);
     liberarLista(form.videos);
     form.id = '';
@@ -833,8 +1011,9 @@
     limpiarFormulario();
 
     form.id = p.id;
-    form.fotos = S.listaUrls(p.imagenes && p.imagenes.length ? p.imagenes : p.imagen)
-      .map(nuevoMedio);
+    var urlsFotos = S.listaUrls(p.imagenes && p.imagenes.length ? p.imagenes : p.imagen);
+    var encsFotos = S.listaEncuadres(p.encuadres, urlsFotos.length);
+    form.fotos = urlsFotos.map(function (url, i) { return nuevoMedio(url, encsFotos[i]); });
     form.videos = S.listaUrls(p.videos && p.videos.length ? p.videos : p.video)
       .map(nuevoMedio);
     form.anteriores = form.fotos.concat(form.videos)

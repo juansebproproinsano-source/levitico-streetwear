@@ -24,6 +24,8 @@ Tiempo estimado: 30–40 minutos.
 
 El script crea las tablas `productos`, `pedidos`, `suscriptores`, `administradores`, `eventos` y `contador_solicitudes`, activa las reglas de seguridad (RLS), define la lista blanca de administradores, los límites de solicitudes por IP y prepara el espacio de almacenamiento `productos`. Puedes volver a ejecutarlo sin romper nada.
 
+Si la base ya existía de antes y solo quieres añadirle la galería (fotos, videos y encuadres), ejecuta en su lugar `supabase/actualizar-galeria.sql`, que hace los `alter table` necesarios. También se puede repetir sin miedo.
+
 Al terminar, comprueba en **Table Editor** que aparecen las tablas vacías.
 
 > **Antes de pulsar Run**, mira la línea marcada `-- >>> CORREO DEL ADMINISTRADOR <<<`. Trae `soporte@leviticostreetwear.com`. Si el usuario que vas a crear en el paso 3 usará otro correo, cámbialo ahí: es el único que tendrá permiso sobre el catálogo y los pedidos.
@@ -182,6 +184,7 @@ El enlace a los términos aparece en el pie, en las notas del carrito y en la fi
 - **Cambiar un texto o el diseño:** guarda el archivo con el vigilante abierto (`publicar.bat`) y sale publicado solo en unos segundos.
 - **Publicar una prenda:** panel → llenar formulario → añadir fotos (hasta 6) y videos (hasta 2) → *Guardar producto*. Aparece de inmediato en la tienda.
 - **Ordenar las fotos:** arrastra una ficha sobre otra o usa las flechas ← →. El botón ★ sube cualquier foto a portada; la primera es la que se ve en la tarjeta, el carrito y la ficha.
+- **Encuadrar una foto:** botón ⛶ de la foto. Arrastra sobre la vista de la tarjeta para mover la foto y usa *Acercar* para recortarla mejor; *Cancelar* deja todo como estaba y *Listo* guarda el encuadre. La tienda lo respeta en la tarjeta, la ficha, las miniaturas y el carrito.
 - **Marcar agotada una talla:** editar el producto y tocar el chip de la talla.
 - **Quitar del catálogo sin borrar:** botón *Ocultar*. El producto queda archivado y puedes volver a publicarlo.
 - **Eliminar de verdad:** botón *Eliminar* (pide confirmación en dos toques). También borra del almacenamiento todas sus fotos y videos.
