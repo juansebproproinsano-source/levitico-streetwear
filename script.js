@@ -737,6 +737,8 @@
   var carritoPie = $('carritoPie');
   var carritoTotal = $('carritoTotal');
   var cartCount = $('cartCount');
+  var chkAcepto = $('chkAcepto');
+  var btnWhatsapp = $('btnWhatsapp');
 
   function claveItem(id, talla) { return id + '|' + talla; }
 
@@ -820,7 +822,15 @@
     }).join('');
 
     carritoTotal.textContent = S.precioCOP(totalCarrito());
+    sincronizarAcepto();
   }
+
+  // El botón de WhatsApp solo se activa con la casilla marcada y el carrito con productos
+  function sincronizarAcepto() {
+    btnWhatsapp.disabled = !(chkAcepto.checked && estado.carrito.length > 0);
+  }
+
+  chkAcepto.addEventListener('change', sincronizarAcepto);
 
   carritoItems.addEventListener('click', function (e) {
     var boton = e.target.closest('[data-accion]');
@@ -876,7 +886,12 @@
     toast('Carrito vaciado.');
   });
 
-  $('btnWhatsapp').addEventListener('click', function () {
+  btnWhatsapp.addEventListener('click', function () {
+    if (!chkAcepto.checked) {
+      toast('Debes aceptar los términos y condiciones para finalizar el pedido.', 'error');
+      return;
+    }
+
     if (!estado.carrito.length) {
       toast('Tu carrito está vacío.', 'error');
       return;

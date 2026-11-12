@@ -422,9 +422,13 @@
         <strong id="carritoTotal">$ 0</strong>
       </div>
       <p class="carrito__aviso">Precios en COP con impuestos incluidos. El envío no está incluido: se calcula antes de pagar.</p>
-      <button class="boton boton--amarillo boton--bloque" id="btnWhatsapp">Finalizar por WhatsApp</button>
+      <label class="carrito__acepto">
+        <input type="checkbox" id="chkAcepto">
+        <span>He leído y acepto los <a class="carrito__legal" href="terminos.html" target="_blank" rel="noopener">términos y condiciones</a>.</span>
+      </label>
+      <button class="boton boton--amarillo boton--bloque" id="btnWhatsapp" disabled>Finalizar por WhatsApp</button>
       <button class="carrito__vaciar" id="btnVaciar">Vaciar carrito</button>
-      <p class="carrito__nota">Al finalizar se abre WhatsApp con tu pedido. Ahí confirmamos envío y forma de pago. Al comprar aceptas los <a class="carrito__legal" href="terminos.html">términos y condiciones</a>.</p>
+      <p class="carrito__nota">Al finalizar se abre WhatsApp con tu pedido. Ahí confirmamos envío y forma de pago.</p>
     </footer>
   </aside>
 </div>
